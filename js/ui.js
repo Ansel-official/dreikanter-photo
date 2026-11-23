@@ -111,6 +111,9 @@ const MENUS = [
       { label: '徕卡 · 浓郁红调', fn: () => applyFilterDirect(FX.cameraLook, { look: 'leica', intensity: 100 }, 'LUT 徕卡') },
       { label: '富士 · 经典铬', fn: () => applyFilterDirect(FX.cameraLook, { look: 'fuji', intensity: 100 }, 'LUT 富士') },
       { label: '相机 LUT…（可调强度）', fn: () => Dialogs.cameraLut() },
+      { label: '预设…（LUT + 曲线 + 调整）', key: 'Ctrl P', fn: () => Dialogs.presets() },
+      { label: '局部调整 · 线性渐变…', fn: () => LocalAdj.begin('linear') },
+      { label: '局部调整 · 径向渐变…', fn: () => LocalAdj.begin('radial') },
       { label: '导入 .cube LUT…', fn: () => Dialogs.cubeLut() },
       { label: '自动白平衡', fn: () => applyFilterDirect(FX.autoWhiteBalance, { strength: 100 }, '自动白平衡') },
       { sep: 1 },
@@ -1468,6 +1471,7 @@ const UI = {
       const k = e.key.toLowerCase();
 
       if (mod && k === 'k') { e.preventDefault(); this.openPalette(); return; }
+    if (mod && !e.shiftKey && k === 'p') { e.preventDefault(); Dialogs.presets(); return; }
       if (mod && !e.shiftKey && k === 'm') { e.preventDefault(); Dialogs.curves(); return; }
     if (mod && e.shiftKey && k === 'm') { e.preventDefault(); setMode(App.mode === 'ps' ? 'apsis' : 'ps'); return; }
       if (mod && e.shiftKey && k === 'f') { e.preventDefault(); Settings.toggleImmersive(); return; }

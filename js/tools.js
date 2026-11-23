@@ -547,6 +547,13 @@ const Tools = {
     if (this.spaceDown) return;
     const pt = screenToDoc(e.clientX, e.clientY);
     App.pointer = { ...pt, inside: true };
+    if (typeof LocalAdj !== 'undefined' && LocalAdj.active) {
+      try { $('#overlay').setPointerCapture(e.pointerId); } catch (err) { }
+      this._down = true;
+      LocalAdj.down(pt);
+      invalidateOverlay();
+      return;
+    }
     /* 自由变换优先接管画布 */
     if (typeof Transform !== 'undefined' && Transform.active) {
       try { $('#overlay').setPointerCapture(e.pointerId); } catch (err) { }
@@ -569,6 +576,11 @@ const Tools = {
     App.pointer = { ...pt, inside: true };
     const cp = $('#cursorPos');
     if (cp) cp.textContent = `${Math.round(pt.x)}, ${Math.round(pt.y)}`;
+    if (typeof LocalAdj !== 'undefined' && LocalAdj.active) {
+      if (this._down) LocalAdj.move(pt);
+      invalidateOverlay();
+      return;
+    }
     if (typeof Transform !== 'undefined' && Transform.active) {
       if (this._down) Transform.move(pt, e);
       else {
@@ -599,6 +611,11 @@ const Tools = {
   pointerUp(e) {
     if (!this._down) { invalidateOverlay(); return; }
     this._down = false;
+    if (typeof LocalAdj !== 'undefined' && LocalAdj.active) {
+      LocalAdj.up();
+      invalidateOverlay();
+      return;
+    }
     if (typeof Transform !== 'undefined' && Transform.active) {
       Transform.up();
       invalidateOverlay();

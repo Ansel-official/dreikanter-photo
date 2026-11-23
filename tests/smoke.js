@@ -2346,6 +2346,221 @@
       return t2.replace(/^输出尺寸\s*/, '');
     });
 
+    /* ================= v14 · 预设系统 ================= */
+    await t('预设 · 保存 / 列出 / 删除', () => {
+      Preset.clear();
+      const a = Preset.save('徕卡青调', { lut: 'leica', intensity: 80, contrast: 12 });
+      const b = Preset.save('', { brightness: 10 });
+      if (Preset.list().length !== 2) throw new Error('列表 ' + Preset.list().length);
+      if (a.name !== '徕卡青调') throw new Error('名称 ' + a.name);
+      if (!/^预设 2$/.test(b.name)) throw new Error('默认名 ' + b.name);
+      if (Preset.get(a.id).recipe.lut !== 'leica') throw new Error('配方没存对');
+      Preset.remove(a.id);
+      if (Preset.list().length !== 1) throw new Error('删除失败');
+      Preset.clear();
+      return '增 2 / 删 1';
+    });
+
+    await t('预设 · JSON 导入导出（同名覆盖）', () => {
+      Preset.clear();
+      Preset.save('A', { brightness: 5 });
+      Preset.save('B', { contrast: 8 });
+      const json = Preset.exportJSON();
+      const parsed = JSON.parse(json);
+      if (parsed.kind !== 'presets' || parsed.presets.length !== 2) throw new Error('导出结构不对');
+      Preset.clear();
+      const r = Preset.importJSON(json);
+      if (r.added !== 2 || r.merged !== 0) throw new Error('导入计数 ' + JSON.stringify(r));
+      const r2 = Preset.importJSON({ presets: [{ name: 'A', recipe: { brightness: 40 } }] });
+      if (r2.merged !== 1) throw new Error('覆盖计数 ' + JSON.stringify(r2));
+      if (Preset.list().find(p => p.name === 'A').recipe.brightness !== 40) throw new Error('覆盖未生效');
+      let bad = '';
+      try { Preset.importJSON('not json'); } catch (e) { bad = e.message; }
+      if (!/JSON/.test(bad)) throw new Error('非法输入未报错');
+      Preset.clear();
+      return '导出 2 → 导入 2 → 覆盖 1';
+    });
+
+    await t('预设 · applyRecipe 管线', async () => {
+      newDocument(24, 24, { bg: '#336699' }); await wait(60);
+      const l = activeLayer();
+      const cv = makeCanvas(24, 24);
+      const c2 = ctx2d(cv);
+      c2.drawImage(l.canvas, 0, 0);
+      const img = c2.getImageData(0, 0, 24, 24);
+      const before = img.data[0];
+      applyRecipe(img, {});
+      if (img.data[0] !== before) throw new Error('空配方改了像素');
+      applyRecipe(img, { brightness: 30 });
+      const b1 = img.data[0];
+      if (!(b1 > before)) throw new Error('亮度没生效 ' + before + ' → ' + b1);
+      applyRecipe(img, { curves: { rgb: [[0, 0], [1, 1]], r: [[0, 0], [1, 1]], g: [[0, 0], [1, 1]], b: [[0, 0], [1, 1]] } });
+      if (img.data[0] !== b1) throw new Error('恒等曲线改了像素');
+      const summary = recipeSummary({ lut: 'leica', intensity: 80, contrast: 12 });
+      if (!/徕卡/.test(summary) || !/对比/.test(summary)) throw new Error('摘要 ' + summary);
+      return summary;
+    });
+
+    await t('预设 · 套用到图层（一步历史）', async () => {
+      newDocument(40, 40, { bg: '#606060' }); await wait(80);
+      if (History.idx !== History.entries.length - 1) History.entries.length = History.idx + 1;
+      const e0 = History.entries.length;
+      const rec = Preset.save('提亮', { brightness: 60 });
+      const p = Preset.get(rec.id);
+      const before = px(activeLayer().canvas, 20, 20)[0];
+      if (!Preset.applyToLayer(p)) throw new Error('套用失败');
+      await wait(120);
+      const after = px(activeLayer().canvas, 20, 20)[0];
+      if (!(after > before + 20)) throw new Error('像素没变亮 ' + before + ' → ' + after);
+      if (History.entries.length - e0 !== 1) throw new Error('历史 ' + (History.entries.length - e0) + ' 步');
+      Preset.clear();
+      return before + ' → ' + after;
+    });
+
+    await t('预设 · 批量处理复用同一配方', async () => {
+      Batch.clear();
+      Batch.download = false;
+      Preset.clear();
+      const rec = Preset.save('批量提亮', { brightness: 70 });
+      Batch.recipe = Object.assign({}, Batch.recipe, Preset.get(rec.id).recipe);
+      Batch.recipe.maxEdge = 0;
+      Batch.recipe.format = 'image/png';
+      const f = await mkImageFile(20, 20, '#404040', 'p.png');
+      Batch.addFiles([f]);
+      Batch.run();
+      for (let i = 0; i < 100 && Batch.running; i++) await wait(60);
+      const it = Batch.items[0];
+      if (it.status !== 'done') throw new Error('批量失败 ' + it.error);
+      if (!it.blob) throw new Error('没有产出 blob');
+      const bmp = await createImageBitmap(it.blob);
+      const cv = makeCanvas(bmp.width, bmp.height);
+      const cc = ctx2d(cv);
+      cc.drawImage(bmp, 0, 0);
+      bmp.close();
+      const px0 = cc.getImageData(10, 10, 1, 1).data[0];
+      Batch.clear(); Preset.clear();
+      if (!(px0 > 0x40 + 20)) throw new Error('配方没进批量像素：' + px0 + '（原 0x40）');
+      return '0x40 → ' + px0.toString(16);
+    });
+
+    await t('预设 · 对话框与指令入口', async () => {
+      Preset.clear();
+      Preset.save('入口测试', { contrast: 20 });
+      const cmd = COMMANDS.find(c => c.id === 'fx.presets');
+      if (!cmd) throw new Error('指令台缺预设入口');
+      Dialogs.presets(); await wait(200);
+      const m = document.querySelector('.modal');
+      if (!m) throw new Error('对话框未打开');
+      if (!/预设/.test(m.textContent)) throw new Error('标题缺失');
+      if (!/入口测试/.test(m.textContent)) throw new Error('列表未显示');
+      if (!/保存当前批量配方/.test(m.textContent)) throw new Error('缺保存按钮');
+      if (!/导入 JSON/.test(m.textContent)) throw new Error('缺导入按钮');
+      const close = m.querySelector('.modal-close');
+      if (close) close.click();
+      await wait(80);
+      Preset.clear();
+      return '指令 + 列表 + 保存/导入';
+    });
+
+    /* ================= v15 · 局部调整（渐变蒙版） ================= */
+    const maskAlpha = (mask, x, y) => ctx2d(mask).getImageData(x, y, 1, 1).data[3];
+
+    await t('局部调整 · 线性蒙版梯度', async () => {
+      newDocument(60, 40, { bg: '#808080' }); await wait(80);
+      const l = activeLayer();
+      LocalAdj.active = true;
+      LocalAdj.region = { type: 'linear', x1: 0, y1: 20, x2: 60, y2: 20 };
+      const m = LocalAdj.maskFor(l);
+      const a0 = maskAlpha(m, 0, 20), aMid = maskAlpha(m, 30, 20), aEnd = maskAlpha(m, 59, 20);
+      if (a0 < 250) throw new Error('起点 ' + a0);
+      if (aEnd > 6) throw new Error('终点 ' + aEnd);
+      if (!(aMid > 100 && aMid < 155)) throw new Error('中点 ' + aMid);
+      return a0 + ' → ' + aMid + ' → ' + aEnd;
+    });
+
+    await t('局部调整 · 径向蒙版与羽化', async () => {
+      newDocument(80, 80, { bg: '#808080' }); await wait(80);
+      const l = activeLayer();
+      LocalAdj.active = true;
+      LocalAdj.feather = 0.4;
+      LocalAdj.region = { type: 'radial', cx: 40, cy: 40, r: 20 };
+      const m = LocalAdj.maskFor(l);
+      if (maskAlpha(m, 40, 40) < 250) throw new Error('中心不是全量');
+      if (maskAlpha(m, 40, 75) > 6) throw new Error('半径外仍有蒙版');
+      const near = maskAlpha(m, 40, 30);
+      if (near < 200) throw new Error('羽化区内 ' + near);
+      return '中心 255 / 羽化区 ' + near + ' / 外部 0';
+    });
+
+    await t('局部调整 · 反相蒙版', async () => {
+      newDocument(40, 40, { bg: '#808080' }); await wait(60);
+      const l = activeLayer();
+      LocalAdj.active = true;
+      LocalAdj.region = { type: 'linear', x1: 0, y1: 20, x2: 40, y2: 20 };
+      LocalAdj.invert = false;
+      const a = LocalAdj.maskFor(l);
+      const left0 = maskAlpha(a, 2, 20), right0 = maskAlpha(a, 38, 20);
+      LocalAdj.invert = true;
+      const b = LocalAdj.maskFor(l);
+      const left1 = maskAlpha(b, 2, 20), right1 = maskAlpha(b, 38, 20);
+      LocalAdj.invert = false;
+      if (!(left0 > 200 && right0 < 40)) throw new Error('正向 ' + left0 + '/' + right0);
+      if (!(left1 < 40 && right1 > 200)) throw new Error('反相 ' + left1 + '/' + right1);
+      return '正 ' + left0 + '→' + right0 + ' / 反 ' + left1 + '→' + right1;
+    });
+
+    await t('局部调整 · 只影响蒙版区（像素级）', async () => {
+      newDocument(60, 40, { bg: '#808080' }); await wait(80);
+      const l = activeLayer();
+      const base = ctx2d(l.canvas).getImageData(0, 0, 60, 40);
+      LocalAdj.active = true;
+      LocalAdj.invert = false;
+      /* 渐变在 x=50 结束，右侧 10px 属于完全不受影响的区域 */
+      LocalAdj.region = { type: 'linear', x1: 0, y1: 20, x2: 50, y2: 20 };
+      const mask = LocalAdj.maskFor(l);
+      const before = { left: px(l.canvas, 2, 20)[0], right: px(l.canvas, 57, 20)[0] };
+      LocalAdj.applyTo(l, base, mask, { brightness: 80 });
+      await wait(80);
+      const after = { left: px(activeLayer().canvas, 2, 20)[0], right: px(activeLayer().canvas, 57, 20)[0] };
+      if (!(after.left > before.left + 40)) throw new Error('蒙版内没变亮 ' + before.left + '→' + after.left);
+      if (Math.abs(after.right - before.right) > 3) throw new Error('蒙版外被改了 ' + before.right + '→' + after.right);
+      return '内 ' + before.left + '→' + after.left + ' / 外 ' + before.right + '→' + after.right;
+    });
+
+    await t('局部调整 · 一步历史与撤销', async () => {
+      newDocument(40, 40, { bg: '#808080' }); await wait(80);
+      const l = activeLayer();
+      if (History.idx !== History.entries.length - 1) History.entries.length = History.idx + 1;
+      const e0 = History.entries.length;
+      const base = ctx2d(l.canvas).getImageData(0, 0, 40, 40);
+      LocalAdj.active = true;
+      LocalAdj.region = { type: 'radial', cx: 20, cy: 20, r: 15 };
+      const mask = LocalAdj.maskFor(l);
+      LocalAdj.applyTo(l, base, mask, { contrast: 60 });
+      await wait(60);
+      const d = History.entries.length - e0;
+      if (d !== 1) throw new Error('历史 ' + d + ' 步');
+      const changed = px(activeLayer().canvas, 20, 20)[0];
+      History.undo(); await wait(80);
+      const back = px(activeLayer().canvas, 20, 20)[0];
+      if (Math.abs(back - 0x80) > 2) throw new Error('撤销未还原 ' + back);
+      return '1 步 · ' + changed + ' → 撤销回 ' + back;
+    });
+
+    await t('局部调整 · 入口与取消', async () => {
+      const ids = COMMANDS.map(c => c.id);
+      if (!ids.includes('fx.localLinear') || !ids.includes('fx.localRadial')) throw new Error('指令缺局部调整');
+      newDocument(40, 40, { bg: '#808080' }); await wait(60);
+      LocalAdj.begin('radial');
+      if (!LocalAdj.active || LocalAdj.mode !== 'radial') throw new Error('begin 未生效');
+      LocalAdj.down({ x: 10, y: 10 });
+      LocalAdj.move({ x: 30, y: 30 });
+      if (!LocalAdj.region || LocalAdj.region.type !== 'radial') throw new Error('拖拽没生成区域');
+      LocalAdj.cancel();
+      if (LocalAdj.active || LocalAdj.region) throw new Error('cancel 未清理');
+      return '线性/径向 + 取消清理';
+    });
+
     await fresh();
     const pass = items.filter(i => i.pass).length;
     return {

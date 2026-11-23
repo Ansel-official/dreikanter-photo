@@ -404,6 +404,9 @@ function drawOverlay() {
   if (typeof Transform !== 'undefined' && Transform.active && Transform.drawOverlay) {
     Transform.drawOverlay(ctx, z);
   }
+  if (typeof LocalAdj !== 'undefined' && LocalAdj.active && LocalAdj.drawOverlay) {
+    LocalAdj.drawOverlay(ctx, z);
+  }
 
   /* 选区蚂蚁线 */
   if (App.selPreviewMask) {

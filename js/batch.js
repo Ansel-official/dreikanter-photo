@@ -101,11 +101,7 @@ const Batch = {
     if (bmp.close) bmp.close();
 
     const img = c.getImageData(0, 0, w, h);
-    if (r.brightness || r.contrast) FX.brightnessContrast(img, { brightness: r.brightness, contrast: r.contrast });
-    if (r.saturation) FX.saturation(img, { saturation: r.saturation });
-    if (r.temp) FX.temperature(img, { temp: r.temp / 100 });
-    if (r.sharpen) FX.sharpen(img, { amount: r.sharpen });
-    if (r.lut) FX.cameraLook(img, { look: r.lut, intensity: r.intensity });
+    applyRecipe(img, r);
     c.putImageData(img, 0, 0);
 
     const blob = await canvasToBlob(cv, r.format, r.quality);
@@ -113,6 +109,7 @@ const Batch = {
     const name = this.outName(item, w, h);
     if (this.download) downloadBlob(blob, name);
     item.out = { w, h, bytes: blob.size, name };
+    item.blob = blob;   /* 供重试/自检读回 */
     return item.out;
   },
 
