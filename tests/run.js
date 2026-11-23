@@ -185,6 +185,48 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await clean();
 
     await clean();
+
+    /* v15 细节图：局部调整范围 */
+    await send('Runtime.evaluate', {
+      expression: `(() => {
+        newDocument(900, 600, { bg: '#20334a' });
+        const c = ctx2d(activeLayer().canvas);
+        const g = c.createRadialGradient(450, 300, 20, 450, 300, 520);
+        g.addColorStop(0, '#e8c48a'); g.addColorStop(0.45, '#7a5f86'); g.addColorStop(1, '#16202e');
+        c.fillStyle = g; c.fillRect(0, 0, 900, 600);
+        fitView(); sync();
+        LocalAdj.active = true;
+        LocalAdj.region = { type: 'radial', cx: 450, cy: 300, r: 190 };
+        invalidateOverlay();
+        const tr = document.getElementById('toastroot'); if (tr) tr.innerHTML = '';
+        return 'ok';
+      })()`, returnByValue: true
+    });
+    await sleep(800);
+    await shot('final-local.png');
+    await send('Runtime.evaluate', { expression: "LocalAdj.cancel(); 'ok'", returnByValue: true });
+    await sleep(300);
+
+    /* v18 细节图：分屏对比（左原图 / 右当前，已套徕卡） */
+    await send('Runtime.evaluate', {
+      expression: `(() => { Dialogs.loadDemo(true); return 'ok'; })()`, returnByValue: true
+    });
+    await sleep(1300);
+    await send('Runtime.evaluate', {
+      expression: `(() => {
+        hideWelcome();
+        applyFilterDirect(FX.cameraLook, { look: 'leica', intensity: 100 }, 'LUT 徕卡');
+        Compare.split = true; Compare.x = 0.52;
+        fitView(); invalidateOverlay(); invalidate();
+        const tr = document.getElementById('toastroot'); if (tr) tr.innerHTML = '';
+        return 'ok';
+      })()`, returnByValue: true
+    });
+    await sleep(900);
+    await shot('final-compare.png');
+    await send('Runtime.evaluate', { expression: "Compare.split = false; invalidateOverlay(); invalidate(); 'ok'", returnByValue: true });
+    await sleep(200);
+
     await send('Runtime.evaluate', { expression: "Settings.set('theme','light',false); fitView(); 'ok'", returnByValue: true });
     await sleep(600);
     await shot('final-light.png');

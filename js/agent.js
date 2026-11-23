@@ -99,6 +99,9 @@ const CMD_GROUPS = [
     name: '滤镜', items: [
       { id: 'fx.curves', label: '曲线…（RGB / 单通道）', hint: 'Ctrl M', say: ['曲线', 's曲线', '拉曲线'], run: () => Dialogs.curves() },
       { id: 'fx.presets', label: '预设…（一键套用）', say: ['预设', '套预设'], run: () => Dialogs.presets() },
+      { id: 'fx.actions', label: '动作…（录制 / 重放）', say: ['动作', '录制动作'], run: () => Dialogs.actions() },
+      { id: 'view.split', label: '分屏对比（左原图 / 右当前）', say: ['分屏', '对比视图'], run: () => Compare.toggleSplit() },
+      { id: 'view.reference', label: '参考图…（叠加对照）', say: ['参考图'], run: () => Dialogs.reference() },
       { id: 'fx.localLinear', label: '局部调整 · 线性渐变', say: ['线性局部', '渐变蒙版'], run: () => LocalAdj.begin('linear') },
       { id: 'fx.localRadial', label: '局部调整 · 径向渐变', say: ['径向局部', '径向蒙版'], run: () => LocalAdj.begin('radial') },
       { id: 'fx.blur', label: '高斯模糊…', say: ['高斯模糊'], run: () => Dialogs.fxBlur() },

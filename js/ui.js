@@ -112,6 +112,7 @@ const MENUS = [
       { label: '富士 · 经典铬', fn: () => applyFilterDirect(FX.cameraLook, { look: 'fuji', intensity: 100 }, 'LUT 富士') },
       { label: '相机 LUT…（可调强度）', fn: () => Dialogs.cameraLut() },
       { label: '预设…（LUT + 曲线 + 调整）', key: 'Ctrl P', fn: () => Dialogs.presets() },
+      { label: '动作…（录制 / 重放）', fn: () => Dialogs.actions() },
       { label: '局部调整 · 线性渐变…', fn: () => LocalAdj.begin('linear') },
       { label: '局部调整 · 径向渐变…', fn: () => LocalAdj.begin('radial') },
       { label: '导入 .cube LUT…', fn: () => Dialogs.cubeLut() },
@@ -151,6 +152,8 @@ const MENUS = [
       { label: '移动时吸附参考线', fn: () => { Guides.snap = !Guides.snap; Guides.save(); toast(Guides.snap ? '已开启参考线吸附' : '已关闭参考线吸附'); } },
       { label: '吸附到网格', fn: () => { Guides.snapGrid = !Guides.snapGrid; Guides.save(); toast(Guides.snapGrid ? '已开启网格吸附' : '已关闭网格吸附'); } },
       { label: '清除全部参考线', fn: () => Guides.clear() },
+      { label: '分屏对比（左原图 / 右当前）', key: 'Ctrl Shift B', fn: () => Compare.toggleSplit() },
+      { label: '参考图…（叠加对照）', fn: () => Dialogs.reference() },
       { sep: 1 },
       { label: '沉浸模式', key: 'Ctrl Shift F', fn: () => Settings.toggleImmersive() },
     ]
@@ -1471,6 +1474,7 @@ const UI = {
       const k = e.key.toLowerCase();
 
       if (mod && k === 'k') { e.preventDefault(); this.openPalette(); return; }
+    if (mod && e.shiftKey && k === 'b') { e.preventDefault(); Compare.toggleSplit(); return; }
     if (mod && !e.shiftKey && k === 'p') { e.preventDefault(); Dialogs.presets(); return; }
       if (mod && !e.shiftKey && k === 'm') { e.preventDefault(); Dialogs.curves(); return; }
     if (mod && e.shiftKey && k === 'm') { e.preventDefault(); setMode(App.mode === 'ps' ? 'apsis' : 'ps'); return; }

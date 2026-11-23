@@ -350,6 +350,10 @@ function drawComposite() {
   }
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
+  if (typeof Compare !== 'undefined') {
+    if (Compare.split) Compare.drawSplit(ctx);
+    if (Compare.refVisible) Compare.drawRef(ctx);
+  }
   App.dirty = false;
   scheduleHistogram();
 }
@@ -399,6 +403,7 @@ function drawOverlay() {
 
   /* 裁剪框 */
   if (App.cropRect) drawCropOverlay(ctx, z);
+  if (typeof Compare !== 'undefined' && Compare.split) Compare.drawOverlay(ctx, z);
 
   /* 自由变换 */
   if (typeof Transform !== 'undefined' && Transform.active && Transform.drawOverlay) {
@@ -1151,7 +1156,12 @@ async function exportImageAsync(job = {}) {
     x.drawImage(cv, 0, 0, out.width, out.height);
     cv = out;
   }
-  const blob = await canvasToBlob(cv, type, quality);
+  let blob = await canvasToBlob(cv, type, quality);
+  /* 写入文档 DPI（JPEG JFIF / PNG pHYs），失败不影响导出 */
+  if (blob && job.dpi !== 0 && typeof writeDpiMetadata === 'function') {
+    const dpi = job.dpi || (App.doc && App.doc.dpi) || 72;
+    try { blob = await writeDpiMetadata(blob, dpi, type); } catch (err) { }
+  }
   if (!blob) throw new Error('编码失败');
   const ext = type === 'image/jpeg' ? '.jpg' : type === 'image/webp' ? '.webp' : '.png';
   const name = job.name || (exportName(baseName(App.doc.name), job.box, scale) + ext);

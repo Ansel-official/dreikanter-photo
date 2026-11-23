@@ -2561,6 +2561,281 @@
       return '线性/径向 + 取消清理';
     });
 
+    /* ================= v16 · 曲线增强 + DPI 元数据 ================= */
+    await t('曲线 · 直方图统计', async () => {
+      newDocument(120, 120, { bg: '#808080' }); await wait(80);
+      const hist = curveHistogram();
+      let sum = 0, peak = 0, peakIdx = -1;
+      for (let i = 0; i < 256; i++) {
+        sum += hist[i];
+        if (hist[i] > peak) { peak = hist[i]; peakIdx = i; }
+      }
+      if (sum < 500) throw new Error('样本太少 ' + sum);
+      if (Math.abs(peakIdx - 128) > 4) throw new Error('峰值位置 ' + peakIdx + '（纯灰应落在 128）');
+      return '峰值 ' + peakIdx + ' · ' + sum + ' 像素';
+    });
+
+    await t('曲线 · 目标调整（拖画布改曲线点）', async () => {
+      newDocument(200, 200, { bg: '#808080' }); await wait(100);
+      fitView(); await wait(80);
+      const before = px(activeLayer().canvas, 100, 100)[0];
+      Dialogs.curves(); await wait(260);
+      const m = document.querySelector('.modal');
+      const btn = [...m.querySelectorAll('button')].find(b => /目标调整/.test(b.textContent));
+      if (!btn) throw new Error('缺目标调整按钮');
+      btn.click(); await wait(60);
+      const ov = document.getElementById('overlay');
+      const pt = docToScreen(100, 100);
+      ov.dispatchEvent(new PointerEvent('pointerdown', { clientX: pt.x, clientY: pt.y, bubbles: true, pointerId: 11 }));
+      ov.dispatchEvent(new PointerEvent('pointermove', { clientX: pt.x, clientY: pt.y - 60, bubbles: true, pointerId: 11 }));
+      ov.dispatchEvent(new PointerEvent('pointerup', { clientX: pt.x, clientY: pt.y - 60, bubbles: true, pointerId: 11 }));
+      await wait(260);
+      const ok = [...m.querySelectorAll('button')].find(b => b.textContent.trim() === '确定');
+      ok.click(); await wait(240);
+      const after = px(activeLayer().canvas, 100, 100)[0];
+      if (!(after > before + 10)) throw new Error('目标调整没提亮 ' + before + ' → ' + after);
+      if (CurveState.rgb.length < 3) throw new Error('曲线点上没记录 ' + CurveState.rgb.length);
+      return before + ' → ' + after + ' · ' + CurveState.rgb.length + ' 点';
+    });
+
+    await t('导出 · JPEG 写入 DPI 元数据', async () => {
+      newDocument(40, 30, { bg: '#3366cc', dpi: 300 }); await wait(100);
+      const res = await exportImageAsync({ type: 'image/jpeg', quality: .9, dpi: 300, name: 'dpi.jpg' });
+      const bytes = new Uint8Array(await res.blob.arrayBuffer());
+      const dpi = readJpegDpi(bytes);
+      if (!dpi) throw new Error('没有 JFIF APP0');
+      if (dpi.units !== 1) throw new Error('单位 ' + dpi.units + '（应为 1=inch）');
+      if (dpi.x !== 300 || dpi.y !== 300) throw new Error('密度 ' + dpi.x + '×' + dpi.y);
+      const bmp = await createImageBitmap(res.blob);
+      if (bmp.width !== 40) throw new Error('加元数据后解码失败 ' + bmp.width);
+      bmp.close();
+      return dpi.x + ' dpi · units ' + dpi.units;
+    });
+
+    await t('导出 · PNG 写入 pHYs 块', async () => {
+      newDocument(40, 30, { bg: '#3366cc', dpi: 300 }); await wait(100);
+      const res = await exportImageAsync({ type: 'image/png', dpi: 300, name: 'dpi.png' });
+      const bytes = new Uint8Array(await res.blob.arrayBuffer());
+      const ph = readPngPHYs(bytes);
+      if (!ph) throw new Error('没有 pHYs 块');
+      if (ph.unit !== 1) throw new Error('单位 ' + ph.unit);
+      if (Math.abs(ph.ppuX - 300 / 0.0254) > 3) throw new Error('每米像素 ' + ph.ppuX);
+      const bmp = await createImageBitmap(res.blob);
+      if (bmp.width !== 40 || bmp.height !== 30) throw new Error('加块后解码尺寸变了');
+      bmp.close();
+      return ph.ppuX + ' px/m · unit ' + ph.unit;
+    });
+
+    await t('导出 · DPI 默认取文档值', async () => {
+      newDocument(30, 20, { bg: '#ffffff', dpi: 150 }); await wait(100);
+      const res = await exportImageAsync({ type: 'image/png', name: 'docdpi.png' });
+      const ph = readPngPHYs(new Uint8Array(await res.blob.arrayBuffer()));
+      if (!ph) throw new Error('没有 pHYs');
+      if (Math.abs(ph.ppuX - 150 / 0.0254) > 3) throw new Error('取到 ' + ph.ppuX);
+      return '150 dpi → ' + ph.ppuX + ' px/m';
+    });
+
+    /* ================= v17 · 动作录制与重放 ================= */
+    await t('动作 · 录制滤镜步骤', async () => {
+      Action.clear();
+      newDocument(30, 30, { bg: '#808080' }); await wait(80);
+      Recorder.start();
+      applyFilterDirect(FX.brightnessContrast, { brightness: 20 }, '亮度');
+      applyFilterDirect(FX.invert, {}, '反相');
+      const rec = Recorder.stop('测试动作');
+      if (!rec) throw new Error('没有保存动作');
+      const a = Action.get(rec.id);
+      if (!a || a.ops.length !== 2) throw new Error('步骤 ' + (a && a.ops.length));
+      if (a.ops[0].fn !== 'brightnessContrast' || a.ops[1].fn !== 'invert') throw new Error('函数名 ' + a.ops.map(o => o.fn).join(','));
+      if (!a.ops[0].params || a.ops[0].params.brightness !== 20) throw new Error('参数没记下来');
+      Action.clear();
+      return a.ops.map(o => o.label).join(' → ');
+    });
+
+    await t('动作 · 重放结果与直接执行一致', async () => {
+      Action.clear();
+      /* A 组：直接执行两步 */
+      newDocument(24, 24, { bg: '#336699' }); await wait(80);
+      applyFilterDirect(FX.brightnessContrast, { brightness: 25 }, '亮度');
+      applyFilterDirect(FX.saturation, { saturation: 30 }, '饱和');
+      await wait(60);
+      const aPix = px(activeLayer().canvas, 12, 12).join(',');
+      /* 录制：换个新图录两步（录制本身也会改像素，所以录完再开新图重放） */
+      newDocument(24, 24, { bg: '#336699' }); await wait(80);
+      Recorder.start();
+      applyFilterDirect(FX.brightnessContrast, { brightness: 25 }, '亮度');
+      applyFilterDirect(FX.saturation, { saturation: 30 }, '饱和');
+      const rec = Recorder.stop('回放组');
+      /* 重放：再开一张同底色的新图 */
+      newDocument(24, 24, { bg: '#336699' }); await wait(80);
+      const bBefore = px(activeLayer().canvas, 12, 12).join(',');
+      const n = Action.apply(rec.id);
+      await wait(80);
+      const bPix = px(activeLayer().canvas, 12, 12).join(',');
+      Action.clear();
+      if (n !== 2) throw new Error('重放步数 ' + n);
+      if (bPix !== aPix) throw new Error('重放结果不一致 ' + bPix + ' vs ' + aPix + '（重放前 ' + bBefore + '）');
+      return '两步一致 · ' + bPix;
+    });
+
+    await t('动作 · 对话框调整也会被录到', async () => {
+      Action.clear();
+      newDocument(30, 30, { bg: '#666666' }); await wait(80);
+      Recorder.start();
+      /* 走 Adjust 管线（弹窗调整内部就是它） */
+      Adjust.start();
+      Adjust.preview(FX.levels, { black: 10, white: 240, gamma: 1.1 });
+      await Adjust.whenIdle();
+      Adjust.commit('色阶');
+      await wait(80);
+      const rec = Recorder.stop('调整动作');
+      const a = rec ? Action.get(rec.id) : null;
+      Action.clear();
+      if (!a || a.ops.length !== 1) throw new Error('录到 ' + (a ? a.ops.length : 0) + ' 步');
+      if (a.ops[0].fn !== 'levels') throw new Error('函数 ' + a.ops[0].fn);
+      return '1 步 · ' + a.ops[0].label;
+    });
+
+    await t('动作 · 持久化与删除', () => {
+      Action.clear();
+      const a = Action.save('持久化', [{ fn: 'invert', params: {}, label: '反相' }]);
+      const rows = Store.get('actions', []);
+      if (!rows.length || rows[0].name !== '持久化') throw new Error('没落库');
+      if (!Action.get(a.id)) throw new Error('取不回');
+      Action.remove(a.id);
+      if (Action.list().length) throw new Error('删除失败');
+      const empty = Recorder.stop('空');
+      if (empty !== null) throw new Error('未开始录制也能停');
+      return '落库/删除/空录保护';
+    });
+
+    await t('动作 · 对话框与指令入口', async () => {
+      Action.clear();
+      Action.save('入口动作', [{ fn: 'invert', params: {}, label: '反相' }]);
+      const ids = COMMANDS.map(c => c.id);
+      if (!ids.includes('fx.actions')) throw new Error('指令台缺动作');
+      Dialogs.actions(); await wait(200);
+      const m = document.querySelector('.modal');
+      if (!m) throw new Error('对话框未打开');
+      const txt = m.textContent;
+      if (!/动作/.test(txt)) throw new Error('标题缺失');
+      if (!/入口动作/.test(txt)) throw new Error('列表缺动作');
+      if (!/开始录制/.test(txt)) throw new Error('缺录制按钮');
+      if (!/停止并保存/.test(txt)) throw new Error('缺停止按钮');
+      const close = m.querySelector('.modal-close');
+      if (close) close.click();
+      await wait(80);
+      Action.clear();
+      return '录制/停止/列表/重放按钮';
+    });
+
+    /* ================= v18 · 分屏对比 / 参考图 ================= */
+    const viewPx = (x, y) => {
+      const vc = document.getElementById('view');
+      const vd = App._vdpr || 1;
+      const d = ctx2d(vc).getImageData(Math.round(x * vd), Math.round(y * vd), 1, 1).data;
+      return [d[0], d[1], d[2], d[3]];
+    };
+
+    await t('对比 · 分屏左原图右当前', async () => {
+      newDocument(200, 100, { bg: '#000000' }); await wait(100);
+      /* 基线是新建时的黑色，随后把当前图层涂红 */
+      ctx2d(activeLayer().canvas).fillStyle = '#ff0000';
+      ctx2d(activeLayer().canvas).fillRect(0, 0, 200, 100);
+      invalidate(); await wait(80);
+      Compare.split = false; Compare.x = 0.5;
+      Compare.split = true;
+      fitView(); layoutFrame(); drawComposite(); await wait(60);
+      const left = viewPx(50, 50), right = viewPx(150, 50);
+      Compare.split = false; drawComposite();
+      if (!(left[0] < 40 && left[1] < 40)) throw new Error('左侧不是原图 ' + left.join(','));
+      if (!(right[0] > 200 && right[1] < 60)) throw new Error('右侧不是当前 ' + right.join(','));
+      return '左 ' + left.slice(0, 3).join(',') + ' / 右 ' + right.slice(0, 3).join(',');
+    });
+
+    await t('对比 · 拖动分隔线', async () => {
+      newDocument(200, 100, { bg: '#ffffff' }); await wait(80);
+      Compare.split = true; Compare.x = 0.5;
+      fitView(); layoutFrame(); await wait(60);
+      const stage = document.getElementById('stage');
+      const r = stage.getBoundingClientRect();
+      const startX = r.left + r.width * 0.5;
+      const y = r.top + r.height * 0.5;
+      const ov = document.getElementById('overlay');
+      ov.dispatchEvent(new PointerEvent('pointerdown', { clientX: startX, clientY: y, bubbles: true, pointerId: 21 }));
+      ov.dispatchEvent(new PointerEvent('pointermove', { clientX: r.left + r.width * 0.3, clientY: y, bubbles: true, pointerId: 21 }));
+      ov.dispatchEvent(new PointerEvent('pointerup', { clientX: r.left + r.width * 0.3, clientY: y, bubbles: true, pointerId: 21 }));
+      const x1 = Compare.x;
+      /* 越界夹取 */
+      Compare.setSplitX(-3);
+      const lo = Compare.x;
+      Compare.setSplitX(9);
+      const hi = Compare.x;
+      Compare.split = false; Compare.x = 0.5;
+      drawComposite();
+      if (Math.abs(x1 - 0.3) > 0.05) throw new Error('拖动后 x=' + x1.toFixed(2));
+      if (lo !== 0.05 || hi !== 0.95) throw new Error('夹取 ' + lo + '/' + hi);
+      return '0.5 → ' + x1.toFixed(2) + ' · 范围 0.05–0.95';
+    });
+
+    await t('参考图 · 载入并叠加', async () => {
+      newDocument(200, 100, { bg: '#000000' }); await wait(100);
+      const f = await (async () => {
+        const cv = makeCanvas(20, 20);
+        const c2 = ctx2d(cv);
+        c2.fillStyle = '#ff00ff'; c2.fillRect(0, 0, 20, 20);
+        const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+        return new File([blob], 'ref.png', { type: 'image/png' });
+      })();
+      if (!await Compare.loadReference(f)) throw new Error('载入失败');
+      Compare.setRefOpacity(1);
+      drawComposite(); await wait(60);
+      const mid = viewPx(100, 50);
+      Compare.clearReference(); drawComposite();
+      if (!(mid[0] > 200 && mid[2] > 200 && mid[1] < 60)) throw new Error('叠加像素 ' + mid.join(','));
+      return '中心 ' + mid.slice(0, 3).join(',');
+    });
+
+    await t('参考图 · 透明度与清除', async () => {
+      newDocument(200, 100, { bg: '#000000' }); await wait(100);
+      const cv = makeCanvas(10, 10);
+      const c2 = ctx2d(cv);
+      c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, 10, 10);
+      const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+      await Compare.loadReference(new File([blob], 'w.png', { type: 'image/png' }));
+      Compare.setRefOpacity(1); drawComposite(); await wait(40);
+      const full = viewPx(100, 50);
+      Compare.setRefOpacity(.5); drawComposite(); await wait(40);
+      const half = viewPx(100, 50);
+      Compare.clearReference(); drawComposite(); await wait(40);
+      const none = viewPx(100, 50);
+      if (!(full[0] > 240)) throw new Error('全量 ' + full.join(','));
+      if (!(half[0] > 100 && half[0] < 170)) throw new Error('半透明 ' + half.join(','));
+      if (none[0] > 10) throw new Error('清除后仍有参考图 ' + none.join(','));
+      return full[0] + ' / ' + half[0] + ' / ' + none[0];
+    });
+
+    await t('对比/参考 · 入口与快捷键', async () => {
+      const ids = COMMANDS.map(c => c.id);
+      if (!ids.includes('view.split') || !ids.includes('view.reference')) throw new Error('指令台缺入口');
+      const view = MENUS.find(m2 => m2.label === '视图');
+      if (!view.items.some(i => /分屏对比/.test(i.label || ''))) throw new Error('视图菜单缺分屏');
+      if (!view.items.some(i => /参考图/.test(i.label || ''))) throw new Error('视图菜单缺参考图');
+      const before = Compare.split;
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'b', ctrlKey: true, shiftKey: true, bubbles: true }));
+      await wait(80);
+      const after = Compare.split;
+      Compare.split = before; drawComposite(); invalidateOverlay();
+      if (after === before) throw new Error('Ctrl+Shift+B 没切换');
+      Dialogs.reference(); await wait(160);
+      const m = document.querySelector('.modal');
+      if (!m || !/参考图/.test(m.textContent)) throw new Error('参考图对话框没打开');
+      const close = m.querySelector('.modal-close');
+      if (close) close.click();
+      await wait(80);
+      return '菜单 + 指令 + 快捷键';
+    });
+
     await fresh();
     const pass = items.filter(i => i.pass).length;
     return {

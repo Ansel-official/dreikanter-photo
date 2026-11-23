@@ -538,6 +538,7 @@ function runFilter(layer, fn, params, label) {
 
 /** 一键滤镜（作用于当前图层，支持选区） */
 function applyFilterDirect(fn, params, label) {
+  if (typeof Recorder !== 'undefined') Recorder.record(fn, params, label);
   const l = activeLayer();
   if (!l || l.locked) { toast('请选择一个可编辑图层', 'err'); return; }
   History.begin(label, [l.id]);
@@ -740,6 +741,7 @@ const Adjust = {
     }
     this.layer.thumbDirty = true;
     App.previewId = null; App.previewCanvas = null;
+    if (typeof Recorder !== 'undefined') Recorder.record(this.lastFn, this.lastParams, label || '调整');
     History.end(label || '调整');
     this.layer = null;
     invalidate(); sync();

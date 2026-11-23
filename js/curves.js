@@ -81,6 +81,27 @@ FX.curves = function (img, p) {
   return img;
 };
 
+/** 当前合成图（降采样）的 256 桶亮度直方图 */
+function curveHistogram(source) {
+  const hist = new Uint32Array(256);
+  const cv = source || (typeof compositeCanvas === 'function' ? compositeCanvas(false) : null);
+  if (!cv) return hist;
+  const n = 160;
+  const k = Math.min(1, n / Math.max(1, Math.max(cv.width, cv.height)));
+  const sw = Math.max(1, Math.round(cv.width * k)), sh = Math.max(1, Math.round(cv.height * k));
+  const small = makeCanvas(sw, sh);
+  const sc = ctx2d(small);
+  sc.imageSmoothingQuality = 'low';
+  sc.drawImage(cv, 0, 0, sw, sh);
+  const d = sc.getImageData(0, 0, sw, sh).data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] < 8) continue;
+    const l = Math.round(0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
+    hist[l < 0 ? 0 : l > 255 ? 255 : l]++;
+  }
+  return hist;
+}
+
 /* ---------------- 曲线对话框 ---------------- */
 const CurveState = { rgb: curveIdentity(), r: curveIdentity(), g: curveIdentity(), b: curveIdentity() };
 const CURVE_CH_LABEL = { rgb: 'RGB', r: '红', g: '绿', b: '蓝' };
@@ -92,6 +113,9 @@ Dialogs.curves = function curvesDialog() {
   const pts = curveCopy(CurveState);
   let channel = 'rgb';
   let drag = null;
+  let histCache = null;
+  let targetMode = false;
+  let targetDrag = null;
 
   const cw = 300, ch = 220;
   const cv = h('canvas', { width: cw * 2, height: ch * 2, class: 'curve-canvas', style: { width: cw + 'px', height: ch + 'px' } });
@@ -109,6 +133,16 @@ Dialogs.curves = function curvesDialog() {
     c2.clearRect(0, 0, cw, ch);
     c2.fillStyle = '#141416';
     c2.fillRect(0, 0, cw, ch);
+    /* 直方图背景 */
+    if (!histCache) histCache = curveHistogram();
+    let hmax = 1;
+    for (let i = 0; i < 256; i++) if (histCache[i] > hmax) hmax = histCache[i];
+    c2.fillStyle = 'rgba(140,170,255,.20)';
+    for (let i = 0; i < 256; i++) {
+      const hgt = (histCache[i] / hmax) * ch * 0.92;
+      if (hgt < 0.4) continue;
+      c2.fillRect(i / 255 * cw, ch - hgt, Math.max(1, cw / 256), hgt);
+    }
     /* 网格 */
     c2.strokeStyle = 'rgba(255,255,255,.08)';
     c2.lineWidth = 1;
@@ -221,10 +255,20 @@ Dialogs.curves = function curvesDialog() {
     }, CURVE_CH_LABEL[k2]));
   });
 
+  const targetBtn = h('button', {
+    class: 'btn ghost', style: { flex: '1' },
+    onclick: () => {
+      targetMode = !targetMode;
+      targetBtn.classList.toggle('primary', targetMode);
+      targetBtn.textContent = targetMode ? '目标调整：开（拖画布）' : '目标调整：关';
+    }
+  }, '目标调整：关');
+
   const body = [
     tabs,
     h('div', { class: 'curve-wrap' }, cv),
     info,
+    h('div', { class: 'exp-bar' }, targetBtn),
     h('div', { class: 'exp-bar' },
       h('button', { class: 'btn ghost', style: { flex: '1' }, onclick: () => { pts[channel] = curveIdentity(); draw(); requestPreview(); } }, '复位当前通道'),
       h('button', { class: 'btn ghost', style: { flex: '1' }, onclick: () => { ['rgb', 'r', 'g', 'b'].forEach(k2 => pts[k2] = curveIdentity()); draw(); requestPreview(); } }, '全部复位'),
@@ -238,6 +282,55 @@ Dialogs.curves = function curvesDialog() {
       }, 'S 曲线')
     )
   ];
+
+  /* 目标调整：在画布上按住某处拖动，直接改该亮度对应的曲线点 */
+  const ov = document.getElementById('overlay');
+  const lumAt = pt => {
+    const src = compositeCanvas(false);
+    const x = clamp(Math.floor(pt.x), 0, src.width - 1), y = clamp(Math.floor(pt.y), 0, src.height - 1);
+    const d = ctx2d(src).getImageData(x, y, 1, 1).data;
+    if (d[3] < 8) return null;
+    return (0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2]) / 255;
+  };
+  const onOvDown = e => {
+    if (!targetMode || !ov) return;
+    e.preventDefault(); e.stopPropagation();
+    const pt = screenToDoc(e.clientX, e.clientY);
+    const v = lumAt(pt);
+    if (v == null) return;
+    const arr = pts[channel];
+    let idx = arr.findIndex(q => Math.abs(q[0] - v) < 0.02);
+    if (idx < 0) {
+      arr.push([v, v]);
+      arr.sort((a, b) => a[0] - b[0]);
+      idx = arr.findIndex(q => Math.abs(q[0] - v) < 1e-6);
+    }
+    targetDrag = { idx, x0: arr[idx][0], y0: arr[idx][1], start: pt };
+    draw();
+  };
+  const onOvMove = e => {
+    if (!targetDrag) return;
+    e.preventDefault(); e.stopPropagation();
+    const pt = screenToDoc(e.clientX, e.clientY);
+    const dy = (targetDrag.start.y - pt.y) / Math.max(1, App.doc.h);
+    pts[channel][targetDrag.idx][1] = clamp(targetDrag.y0 + dy * 1.6, 0, 1);
+    draw(); requestPreview();
+  };
+  const onOvUp = () => { targetDrag = null; };
+  if (ov && !ov.dataset.curveBound) {
+    ov.dataset.curveBound = '1';
+    ov.addEventListener('pointerdown', onOvDown, true);
+    ov.addEventListener('pointermove', onOvMove, true);
+    ov.addEventListener('pointerup', onOvUp, true);
+  }
+  const unbind = () => {
+    if (!ov) return;
+    ov.removeEventListener('pointerdown', onOvDown, true);
+    ov.removeEventListener('pointermove', onOvMove, true);
+    ov.removeEventListener('pointerup', onOvUp, true);
+    delete ov.dataset.curveBound;
+  };
+
 
   draw();
   Adjust.preview(FX.curves, { curves: pts });
@@ -255,6 +348,6 @@ Dialogs.curves = function curvesDialog() {
         }
       }
     ],
-    onClose: () => { if (Adjust.layer) Adjust.cancel(); }
+    onClose: () => { unbind(); if (Adjust.layer) Adjust.cancel(); }
   });
 };
