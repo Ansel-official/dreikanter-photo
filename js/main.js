@@ -69,7 +69,7 @@
     /* 首屏可交互打点：导航开始 → 初始化完成 */
     if (typeof Perf !== 'undefined') Perf.boot = Math.round(performance.now());
 
-    console.log('%cDreikanter photo', 'color:#7b8cff;font-weight:700;font-size:14px', 'v9.0 · © Apsis severs 2026 & Ansel Design 2026');
+    console.log('%cDreikanter photo', 'color:#7b8cff;font-weight:700;font-size:14px', APP_VERSION + ' · © Apsis severs 2026 & Ansel Design 2026');
     console.log('内置 API 可用： Dreikanter.info()');
   }
 

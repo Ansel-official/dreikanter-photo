@@ -83,19 +83,69 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       if (s.result && s.result.data) fs.writeFileSync(path.join(__dirname, '..', file), Buffer.from(s.result.data, 'base64'));
       console.log('已保存 ' + file);
     };
+    const clean = async () => {
+      await send('Runtime.evaluate', {
+        expression: `(() => {
+          if (typeof Transform !== 'undefined' && Transform.active) Transform.cancel();
+          Guides.clear(); Guides.setUnit('px'); Guides.show = true; Guides.snapGrid = false;
+          App.showGrid = false;
+          const tr = document.getElementById('toastroot'); if (tr) tr.innerHTML = '';
+          fitView(); invalidateOverlay(); return 'ok';
+        })()`, returnByValue: true
+      });
+      await sleep(320);
+    };
+
     await send('Page.navigate', { url: BASE + '/?editor' }); await sleep(2600);
+    await clean();
     await send('Runtime.evaluate', { expression: "hideWelcome(); fitView(); App.showGrid=false; 'ok'", returnByValue: true });
     await shot('final.png');
 
+    /* v10 细节图 1：标尺（mm）+ 参考线（含 30° 斜参考线）+ 网格 */
+    await send('Runtime.evaluate', {
+      expression: `(() => {
+        hideWelcome();
+        Guides.setUnit('mm');
+        Guides.data = { x: [420, 1180], y: [260, 700], angled: [{ x: 800, y: 520, a: 30 }] };
+        Guides.color = '#4fd1ff'; Guides.style = 'dashed';
+        Guides.grid.size = 100; Guides.grid.sub = 4; Guides.grid.color = '#78aaff'; Guides.grid.opacity = .45;
+        App.showGrid = true; Guides.show = true;
+        fitView(); setZoom(0.78); Guides.syncCorner(); invalidateOverlay();
+        return 'ok';
+      })()`, returnByValue: true
+    });
+    await shot('final-guides.png');
+
+    /* v10 细节图 2：自由变换（8 手柄 + 旋转环 + 数值栏） */
+    await clean();
+    await send('Runtime.evaluate', {
+      expression: `(() => {
+        const l = App.layers[App.layers.length - 1];
+        App.activeId = l.id; sync();
+        Transform.begin();
+        Transform.setSize(App.doc.w * .78, App.doc.h * .78, false);
+        Transform.angle = -7; Transform.render(); Transform.syncBar(); UI.renderOptions();
+        fitView(); invalidateOverlay();
+        return 'ok';
+      })()`, returnByValue: true
+    });
+    await shot('final-transform.png');
+
+    await clean();
     await send('Runtime.evaluate', { expression: "Settings.set('theme','light',false); fitView(); 'ok'", returnByValue: true });
+    await sleep(600);
     await shot('final-light.png');
     await send('Runtime.evaluate', { expression: "Settings.set('theme','dark',false); 'ok'", returnByValue: true });
 
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     await sleep(400);
+    await send('Runtime.evaluate', { expression: "Settings.set('theme','dark',false); Guides.clear(); App.showGrid=false; 'ok'", returnByValue: true });
     await send('Page.navigate', { url: BASE + '/?editor' }); await sleep(2800);
-    await send('Runtime.evaluate', { expression: "hideWelcome(); fitView(); 'ok'", returnByValue: true });
+    await send('Runtime.evaluate', {
+      expression: "hideWelcome(); fitView(); App.showGrid=false; Guides.clear(); document.getElementById('toastroot').innerHTML=''; 'ok'",
+      returnByValue: true
+    });
     await shot('final-mobile.png', { x: 0, y: 0, width: 390, height: 844, scale: 2 });
   }
 

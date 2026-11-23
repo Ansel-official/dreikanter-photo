@@ -843,7 +843,7 @@ const Dialogs = {
     const mem = (typeof Resources !== 'undefined' && Resources.memory) ? Resources.memory() : null;
     const perfLine = (typeof Perf !== 'undefined') ? Perf.summary() : '未启用监控';
     modal({
-      title: '关于', sub: 'v9.0', width: 460,
+      title: '关于', sub: APP_VERSION, width: 460,
       body: [
         h('div', { style: { display: 'flex', gap: '14px', alignItems: 'center' } },
           h('div', {
@@ -852,7 +852,7 @@ const Dialogs = {
           }),
           h('div', {},
             h('div', { style: { fontSize: '15px', fontWeight: '600', color: 'var(--c-text)' } }, 'Dreikanter photo'),
-            h('div', { style: { fontSize: '10.5px', color: 'var(--c-text-2)', marginTop: '2px' } }, 'v9.0 · 构建 2026-11-08 · 双模式图像工作台'),
+            h('div', { style: { fontSize: '10.5px', color: 'var(--c-text-2)', marginTop: '2px' } }, APP_VERSION + ' · 构建 ' + APP_BUILD + ' · 双模式图像工作台'),
             h('div', { style: { fontSize: '10px', color: 'var(--c-text-3)', marginTop: '4px', letterSpacing: '.3px' } }, '© Apsis severs 2026 & Ansel Design 2026')
           )
         ),
@@ -873,7 +873,7 @@ const Dialogs = {
           h('button', { class: 'btn', onclick: () => Errors.export() }, '导出错误日志'),
           h('button', {
             class: 'btn ghost', onclick: () => {
-              const txt = 'Dreikanter photo v9.0\n构建 2026-11-08\nUA ' + navigator.userAgent;
+              const txt = 'Dreikanter photo ' + APP_VERSION + '\n构建 ' + APP_BUILD + '\nUA ' + navigator.userAgent;
               navigator.clipboard.writeText(txt).then(() => toast('版本信息已复制', 'ok')).catch(() => toast('复制失败', 'err'));
             }
           }, '复制版本信息')

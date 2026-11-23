@@ -3,6 +3,10 @@
    ========================================================================== */
 'use strict';
 
+/* 版本号单一来源：关于面板 / 控制台 / 自检 / Service Worker 都从这里取 */
+const APP_VERSION = 'v10.0';
+const APP_BUILD = '2026-11-23';
+
 const $  = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
@@ -112,9 +116,14 @@ function hexToRgb(hex) {
   if (isNaN(n)) return { r: 0, g: 0, b: 0 };
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
-const pad2 = n => (n < 16 ? '0' : '') + Math.round(n);
+const pad2 = n => (n < 10 ? '0' : '') + Math.round(n);
+/* 单通道 → 两位十六进制（pad2 是十进制补零，用于时间，不能拿来拼颜色） */
+const hex2 = n => {
+  const v = Math.max(0, Math.min(255, Math.round(Number(n) || 0)));
+  return (v < 16 ? '0' : '') + v.toString(16);
+};
 function rgbToHex(r, g, b) {
-  return '#' + pad2(r) + pad2(g) + pad2(b);
+  return '#' + hex2(r) + hex2(g) + hex2(b);
 }
 function rgbaStr(hex, a = 1) {
   const { r, g, b } = hexToRgb(hex);

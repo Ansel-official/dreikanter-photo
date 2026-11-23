@@ -316,10 +316,10 @@ const UI = {
     const hex = $('#colorHex'); if (hex) hex.value = App.fg.toUpperCase();
     const c = hexToRgb(App.fg);
     const sr = $('#colorR'), sg = $('#colorG'), sb = $('#colorB');
-    if (sr) sr.value = c[0];
-    if (sg) sg.value = c[1];
-    if (sb) sb.value = c[2];
-    const hsl = rgbToHsl(c[0], c[1], c[2]);
+    if (sr) sr.value = c.r;
+    if (sg) sg.value = c.g;
+    if (sb) sb.value = c.b;
+    const hsl = rgbToHsl(c.r, c.g, c.b);
     const sh = $('#colorH'), ss = $('#colorS'), sl = $('#colorL');
     if (sh) sh.value = Math.round(hsl.h);
     if (ss) ss.value = Math.round(hsl.s * 100);
@@ -1058,7 +1058,7 @@ const UI = {
           onclick: () => {
             this.hist = this.hist || { ch: 'rgb', lo: 0, hi: 255 };
             this.hist.ch = v;
-            $('.hist-ch-btn', chBar).forEach(b => b.classList.toggle('on', b.dataset.ch === v));
+            $$('.hist-ch-btn', chBar).forEach(b => b.classList.toggle('on', b.dataset.ch === v));
             this.drawHistogram();
           }
         }, label));

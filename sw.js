@@ -1,12 +1,13 @@
 /* Dreikanter photo — Service Worker（全量静态缓存，版本化） */
 'use strict';
-const VERSION = 'dreikanter-v9-2026-11-08';
+const VERSION = 'dreikanter-v10-2026-11-23';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest',
   'css/tokens.css', 'css/base.css', 'css/apsis.css', 'css/themes.css', 'css/mobile.css', 'css/polish.css', 'css/ui-kit.css',
   'js/util.js', 'js/icons.js', 'js/perf.js', 'js/engine.js', 'js/docs.js', 'js/lut.js', 'js/filters.js', 'js/tools.js',
-  'js/ui.js', 'js/dialogs.js', 'js/layerfx.js', 'js/guides.js', 'js/archive.js', 'js/apsis.js', 'js/agent.js', 'js/api.js',
-  'js/touch.js', 'js/tips.js', 'js/quality.js', 'js/settings.js', 'js/pwa.js', 'js/main.js',
+  'js/transform.js', 'js/filter-worker.js', 'js/ui.js', 'js/dialogs.js', 'js/layerfx.js', 'js/guides.js', 'js/archive.js',
+  'js/apsis.js', 'js/agent.js', 'js/api.js', 'js/touch.js', 'js/tips.js', 'js/quality.js', 'js/settings.js', 'js/pwa.js', 'js/main.js',
+  'tests/smoke.js',
   'icons/icon-192.png', 'icons/icon-512.png'
 ];
 

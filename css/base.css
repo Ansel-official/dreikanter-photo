@@ -597,7 +597,7 @@ body.theme-light .hist-ch-btn{background:#eee;border-color:#d8d8de;color:#5c5c66
 body.theme-light .color-num{background:#fff;border-color:#d8d8de;color:#2a2a32}
 /* 导出队列面板 */
 .exp-bar{display:flex;gap:6px}
-.exp-bar .btn{height:24px;padding:0;font-size:10.5px}
+.exp-bar .btn{height:24px;padding:0 8px;font-size:10.5px}
 .exp-list{display:flex;flex-direction:column;gap:4px;max-height:190px;overflow-y:auto}
 .exp-row{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid #333;border-radius:4px;background:#242424}
 .exp-dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto;background:#6d6d75}

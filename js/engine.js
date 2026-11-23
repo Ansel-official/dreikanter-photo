@@ -594,20 +594,70 @@ function invertSelection() {
 /* ---------------- 选区精修 / 保存 ---------------- */
 function refineMask(mask, opts = {}) {
   const feather = Math.max(0, opts.feather || 0);
-  const expand = opts.expand || 0;
+  const expand = Math.round(opts.expand || 0);
   const w = mask.width, h = mask.height;
   const out = makeCanvas(w, h);
   const c = ctx2d(out);
-  const blur = feather > 0 ? feather / 2 : (expand ? Math.max(1, Math.abs(expand) * .9) : 0);
-  if (blur > 0) c.filter = 'blur(' + blur.toFixed(2) + 'px)';
-  c.drawImage(mask, 0, 0);
-  c.filter = 'none';
   if (expand) {
-    const img = c.getImageData(0, 0, w, h);
+    /* 扩展 / 收缩：两遍 chamfer 距离变换（3-4 近似欧氏，误差 ~2%），按半径取阈值 */
+    const img = ctx2d(mask).getImageData(0, 0, w, h);
     const a = img.data;
-    const t = expand > 0 ? 96 : 160;
-    for (let i = 3; i < a.length; i += 4) a[i] = a[i] > t ? 255 : 0;
+    const N = w * h;
+    const BIG = 1e6, D1 = 1, D2 = 1.4142;
+    const grow = expand > 0, R = Math.abs(expand);
+    const d = new Float32Array(N);
+    const solid = i => a[i * 4 + 3] > 127;
+    for (let y = 0, i = 0; y < h; y++) {
+      for (let x = 0; x < w; x++, i++) {
+        const v = solid(i) ? 1 : 0;
+        if (grow) d[i] = v ? BIG : 0;
+        else if (!v) d[i] = BIG;
+        else {
+          const edge = x === 0 || y === 0 || x === w - 1 || y === h - 1 ||
+            !solid(i - 1) || !solid(i + 1) || !solid(i - w) || !solid(i + w);
+          d[i] = edge ? 0 : BIG;
+        }
+      }
+    }
+    for (let y = 0, i = 0; y < h; y++) {
+      for (let x = 0; x < w; x++, i++) {
+        let v = d[i];
+        if (v === 0) continue;
+        if (x > 0) v = Math.min(v, d[i - 1] + D1);
+        if (y > 0) {
+          v = Math.min(v, d[i - w] + D1);
+          if (x > 0) v = Math.min(v, d[i - w - 1] + D2);
+          if (x < w - 1) v = Math.min(v, d[i - w + 1] + D2);
+        }
+        d[i] = v;
+      }
+    }
+    for (let y = h - 1, i = N - 1; y >= 0; y--) {
+      for (let x = w - 1; x >= 0; x--, i--) {
+        let v = d[i];
+        if (v === 0) continue;
+        if (x < w - 1) v = Math.min(v, d[i + 1] + D1);
+        if (y < h - 1) {
+          v = Math.min(v, d[i + w] + D1);
+          if (x < w - 1) v = Math.min(v, d[i + w + 1] + D2);
+          if (x > 0) v = Math.min(v, d[i + w - 1] + D2);
+        }
+        d[i] = v;
+      }
+    }
+    for (let i = 0; i < N; i++) {
+      a[i * 4 + 3] = grow ? (d[i] <= R + 0.5 ? 255 : 0) : (d[i] > R ? 255 : 0);
+    }
     c.putImageData(img, 0, 0);
+  } else {
+    c.drawImage(mask, 0, 0);
+  }
+  if (feather > 0) {
+    const blurred = makeCanvas(w, h);
+    const bc = ctx2d(blurred);
+    bc.filter = 'blur(' + feather + 'px)';
+    bc.drawImage(out, 0, 0);
+    return blurred;
   }
   return out;
 }
