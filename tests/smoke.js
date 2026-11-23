@@ -2053,6 +2053,196 @@
       return rows.join(' / ');
     });
 
+    /* ================= Y v12 · 曲线 / 批量处理 ================= */
+    const mkImageFile = async (w2, h2, color, name = 'test.png') => {
+      const cv = makeCanvas(w2, h2);
+      const c2 = ctx2d(cv);
+      c2.fillStyle = color;
+      c2.fillRect(0, 0, w2, h2);
+      const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+      return new File([blob], name, { type: 'image/png' });
+    };
+
+    await t('曲线 · identity LUT 恒等', () => {
+      const lut = buildCurveLUT([[0, 0], [1, 1]]);
+      for (let i = 0; i < 256; i++) {
+        if (lut[i] !== i) throw new Error('第 ' + i + ' 级 ' + lut[i]);
+      }
+      const lut2 = buildCurveLUT([]);
+      if (lut2[128] !== 128) throw new Error('空点集未回退恒等');
+      return '256 级恒等';
+    });
+
+    await t('曲线 · 单调插值不过冲', () => {
+      const lut = buildCurveLUT([[0, 0], [0.5, 0.7], [1, 1]]);
+      if (!(lut[128] > 150)) throw new Error('中间调没提亮 ' + lut[128]);
+      for (let i = 1; i < 256; i++) if (lut[i] < lut[i - 1]) throw new Error('非单调 ' + i);
+      if (lut[0] !== 0 || lut[255] !== 255) throw new Error('端点被改');
+      /* 陡峭段：控制点本身允许陡，但不能过冲（超出 0.95 再回落） */
+      const steep = buildCurveLUT([[0, 0], [0.05, 0.95], [1, 1]]);
+      for (let i = 1; i < 256; i++) if (steep[i] < steep[i - 1]) throw new Error('陡峭段非单调 ' + i);
+      if (Math.abs(steep[13] - 242) > 4) throw new Error('控制点处 ' + steep[13] + '（应 ≈242）');
+      if (steep[26] > 250) throw new Error('过冲：第 26 级已 ' + steep[26]);
+      return '128→' + lut[128] + '，陡峭段无过冲';
+    });
+
+    await t('曲线 · FX.curves 应用与 alpha 保持', async () => {
+      newDocument(30, 30, { bg: '#404040' }); await wait(60);
+      const l = activeLayer();
+      const cv = makeCanvas(30, 30);
+      const c2 = ctx2d(cv);
+      c2.drawImage(l.canvas, 0, 0);
+      const img = c2.getImageData(0, 0, 30, 30);
+      img.data[3] = 128;  /* 造一个半透明像素 */
+      FX.curves(img, { curves: { rgb: [[0, 0], [1, 1]], r: [[0, 0], [1, 1]], g: [[0, 0], [1, 1]], b: [[0, 0], [1, 1]] } });
+      if (img.data[0] !== 0x40) throw new Error('恒等曲线改了像素 ' + img.data[0]);
+      if (img.data[3] !== 128) throw new Error('alpha 被改 ' + img.data[3]);
+      FX.curves(img, { curves: { rgb: [[0, 0], [1, 1]], r: [[0, 0], [0.5, 1], [1, 1]] } });
+      if (!(img.data[0] > 0x60)) throw new Error('单通道曲线未提亮 ' + img.data[0]);
+      return '0x40 → ' + img.data[0].toString(16);
+    });
+
+    await t('曲线 · 对话框交互（加点 / 预览 / 确定）', async () => {
+      newDocument(400, 400, { bg: '#808080' }); await wait(120);
+      Dialogs.curves(); await wait(220);
+      const m = document.querySelector('.modal');
+      if (!m) throw new Error('对话框未打开');
+      const cv = m.querySelector('.curve-canvas');
+      if (!cv) throw new Error('缺曲线画布');
+      const r = cv.getBoundingClientRect();
+      const before = px(activeLayer().canvas, 200, 200).join(',');
+      /* 在画布中央偏上拖动 = 提亮中间调 */
+      cv.dispatchEvent(new PointerEvent('pointerdown', { clientX: r.left + r.width * 0.5, clientY: r.top + r.height * 0.5, bubbles: true, pointerId: 3 }));
+      cv.dispatchEvent(new PointerEvent('pointermove', { clientX: r.left + r.width * 0.5, clientY: r.top + r.height * 0.2, bubbles: true, pointerId: 3 }));
+      cv.dispatchEvent(new PointerEvent('pointerup', { clientX: r.left + r.width * 0.5, clientY: r.top + r.height * 0.2, bubbles: true, pointerId: 3 }));
+      await wait(300);
+      if (!Adjust.lastFn) throw new Error('没有触发预览');
+      const shown = px(App.previewCanvas, 200 * (App.previewCanvas.width / 400), 200 * (App.previewCanvas.height / 400));
+      const btn = [...m.querySelectorAll('button')].find(b => b.textContent.trim() === '确定');
+      if (!btn) throw new Error('缺确定按钮');
+      btn.click(); await wait(240);
+      const after = px(activeLayer().canvas, 200, 200).join(',');
+      if (before === after) throw new Error('确定后像素未变化（预览 ' + shown.join(',') + '）');
+      return '中间调 ' + before.split(',')[0] + ' → ' + after.split(',')[0];
+    });
+
+    await t('曲线 · S 曲线预设', async () => {
+      Dialogs.curves(); await wait(200);
+      const m = document.querySelector('.modal');
+      const sBtn = [...m.querySelectorAll('button')].find(b => /S 曲线/.test(b.textContent));
+      if (!sBtn) throw new Error('缺 S 曲线按钮');
+      sBtn.click(); await wait(240);
+      const c = String(Adjust.lastParams && JSON.stringify(Adjust.lastParams.curves.rgb));
+      if (!/0\.25/.test(c)) throw new Error('S 曲线点未生效：' + c.slice(0, 80));
+      const cancel = [...m.querySelectorAll('button')].find(b => b.textContent.trim() === '取消');
+      if (cancel) cancel.click();
+      await wait(120);
+      return '四点 S 曲线';
+    });
+
+    await t('批量 · 加入图片与统计', async () => {
+      Batch.clear();
+      const f1 = await mkImageFile(80, 60, '#ff0000', 'a.png');
+      const f2 = await mkImageFile(40, 30, '#00ff00', 'b.png');
+      const bad = new File(['x'], 'note.txt', { type: 'text/plain' });
+      const n = Batch.addFiles([f1, f2, bad]);
+      const st = Batch.stats();
+      if (n !== 2) throw new Error('加入 ' + n + ' 张（应 2）');
+      if (st.total !== 2) throw new Error('总数 ' + st.total);
+      if (st.queued !== 2) throw new Error('队列 ' + st.queued);
+      Batch.clear();
+      return '2 张入队，txt 被拒';
+    });
+
+    await t('批量 · 执行成功（缩放 / 格式 / 命名）', async () => {
+      Batch.clear();
+      Batch.download = false;
+      Object.assign(Batch.recipe, {
+        lut: '', intensity: 100, brightness: 0, contrast: 0, saturation: 0, temp: 0, sharpen: 0,
+        maxEdge: 64, format: 'image/png', quality: .9, prefix: 'x-'
+      });
+      const f1 = await mkImageFile(200, 100, '#3366cc', 'wide.png');
+      const f2 = await mkImageFile(50, 40, '#cc3366', 'small.png');
+      Batch.addFiles([f1, f2]);
+      Batch.run();
+      for (let i = 0; i < 100 && Batch.running; i++) await wait(60);
+      const st = Batch.stats();
+      if (st.done !== 2) throw new Error('完成 ' + st.done + ' / 失败 ' + st.failed);
+      const it = Batch.items[0];
+      if (it.out.w !== 64 || it.out.h !== 32) throw new Error('缩放尺寸 ' + it.out.w + '×' + it.out.h);
+      if (it.out.name !== 'x-wide-64x32.png') throw new Error('命名 ' + it.out.name);
+      if (Batch.items[1].out.w !== 50) throw new Error('小图被放大 ' + Batch.items[1].out.w);
+      Batch.clear();
+      return '2 张完成 · ' + Batch.items.length;
+    });
+
+    await t('批量 · 坏图不中断整批', async () => {
+      Batch.clear();
+      Batch.download = false;
+      Batch.recipe.maxEdge = 0;
+      const good = await mkImageFile(20, 20, '#ffffff', 'good.png');
+      const bad = new File([new Uint8Array([1, 2, 3, 4])], 'bad.png', { type: 'image/png' });
+      Batch.addFiles([bad, good]);
+      Batch.run();
+      for (let i = 0; i < 100 && Batch.running; i++) await wait(60);
+      const st = Batch.stats();
+      if (st.failed !== 1 || st.done !== 1) throw new Error('失败 ' + st.failed + ' / 完成 ' + st.done);
+      const failed = Batch.items.find(x => x.status === 'failed');
+      if (!failed.error) throw new Error('失败项没有错误信息');
+      if (!Batch.retry(failed.id)) throw new Error('重试无效');
+      if (failed.status !== 'queued') throw new Error('重试后状态 ' + failed.status);
+      Batch.clear();
+      return '1 败 1 成 · 可重试';
+    });
+
+    await t('批量 · 取消后剩余标记 skipped', async () => {
+      Batch.clear();
+      Batch.download = false;
+      const files = [];
+      for (let i = 0; i < 5; i++) files.push(await mkImageFile(400, 300, '#123456', 'c' + i + '.png'));
+      Batch.addFiles(files);
+      Batch.run();
+      await wait(30);
+      Batch.cancel();
+      for (let i = 0; i < 120 && Batch.running; i++) await wait(60);
+      const st = Batch.stats();
+      if (!st.done) throw new Error('一张都没处理完');
+      if (st.done === 5) throw new Error('取消得太晚，全部完成了');
+      if (st.skipped + st.done !== 5) throw new Error('状态不完整 ' + JSON.stringify(st));
+      Batch.clear();
+      return Math.floor(st.done) + ' 完成 / ' + st.skipped + ' 跳过';
+    });
+
+    await t('批量 · 对话框入口与列表', async () => {
+      const file = MENUS.find(mm => mm.label === '文件');
+      if (!file || !file.items.some(i => /批量处理/.test(i.label || ''))) throw new Error('文件菜单缺批量处理');
+      Batch.clear();
+      Batch.addFiles([await mkImageFile(16, 16, '#abcdef', 'in-list.png')]);
+      Batch.download = false;
+      Dialogs.batch(); await wait(200);
+      const m = document.querySelector('.modal');
+      if (!m) throw new Error('对话框未打开');
+      if (!/批量处理/.test(m.textContent)) throw new Error('标题缺失');
+      if (!/添加图片/.test(m.textContent)) throw new Error('缺添加按钮');
+      if (!/in-list\.png/.test(m.textContent)) throw new Error('列表未显示图片');
+      const close = m.querySelector('.modal-close');
+      if (close) close.click();
+      await wait(80);
+      Batch.clear();
+      return '菜单 + 列表 + 配方面板';
+    });
+
+    await t('曲线 · Ctrl M 打开对话框', async () => {
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'm', ctrlKey: true, bubbles: true }));
+      await wait(200);
+      const m = document.querySelector('.modal');
+      if (!m || !/曲线/.test(m.textContent)) throw new Error('Ctrl M 没打开曲线');
+      const cancel = [...m.querySelectorAll('button')].find(b => b.textContent.trim() === '取消');
+      if (cancel) cancel.click();
+      await wait(120);
+      return 'Ctrl M 直达';
+    });
+
     await fresh();
     const pass = items.filter(i => i.pass).length;
     return {

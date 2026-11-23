@@ -741,3 +741,8 @@ body.hide-copy .copyright{display:none}
 body.theme-light .order-row:hover{background:rgba(0,0,0,.05)}
 body.theme-light .key-row{color:#4a4a54}
 body.theme-light .key-input{background:#fff;border-color:#d4d4db;color:#222}
+
+/* 曲线编辑器 */
+.curve-wrap{display:flex;justify-content:center;margin:6px 0 4px}
+.curve-canvas{border:1px solid var(--c-border,#3d3d3d);border-radius:6px;cursor:crosshair;touch-action:none}
+.curve-ch.on{background:var(--accent);border-color:var(--accent);color:#fff}

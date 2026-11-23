@@ -4,7 +4,7 @@
 'use strict';
 
 /* 版本号单一来源：关于面板 / 控制台 / 自检 / Service Worker 都从这里取 */
-const APP_VERSION = 'v11.0';
+const APP_VERSION = 'v12.0';
 const APP_BUILD = '2026-11-23';
 
 const $  = (sel, root = document) => root.querySelector(sel);

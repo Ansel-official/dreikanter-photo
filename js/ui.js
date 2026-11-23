@@ -20,6 +20,7 @@ const MENUS = [
       { label: '导出为 PNG', key: 'Ctrl S', fn: () => exportImage('image/png') },
       { label: '导出为 JPEG…', fn: () => Dialogs.exportDoc('image/jpeg') },
       { label: '导出为 WEBP…', fn: () => Dialogs.exportDoc('image/webp') },
+      { label: '批量处理多张照片…', fn: () => Dialogs.batch() },
       { sep: 1 },
       { label: '返回主页', key: 'Esc', fn: () => showWelcome() },
       { label: '关闭图像', key: 'Ctrl W', fn: () => Dialogs.closeDoc() }
@@ -89,6 +90,7 @@ const MENUS = [
     label: '滤镜', items: [
       { cap: '调整' },
       { label: '亮度 / 对比度…', fn: () => Dialogs.adjustBrightness() },
+      { label: '曲线…（RGB / 单通道）', key: 'Ctrl M', fn: () => Dialogs.curves() },
       { label: '色阶…', fn: () => Dialogs.adjustLevels() },
       { label: '曝光度…', fn: () => Dialogs.adjustExposure() },
       { label: '色相 / 饱和度…', fn: () => Dialogs.adjustHSL() },
@@ -1465,7 +1467,8 @@ const UI = {
       const k = e.key.toLowerCase();
 
       if (mod && k === 'k') { e.preventDefault(); this.openPalette(); return; }
-      if (mod && e.shiftKey && k === 'm') { e.preventDefault(); setMode(App.mode === 'ps' ? 'apsis' : 'ps'); return; }
+      if (mod && !e.shiftKey && k === 'm') { e.preventDefault(); Dialogs.curves(); return; }
+    if (mod && e.shiftKey && k === 'm') { e.preventDefault(); setMode(App.mode === 'ps' ? 'apsis' : 'ps'); return; }
       if (mod && e.shiftKey && k === 'f') { e.preventDefault(); Settings.toggleImmersive(); return; }
       if (mod && k === ',') { e.preventDefault(); Settings.open(); return; }
       if (mod && k === 'z') {
