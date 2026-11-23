@@ -1,4 +1,7 @@
 # ??????? / ????
 .tmp-*-profile/
 .tmp-*.png
+tests/last-run.txt
+tests/run-*.txt
+tmp-*.cjs
 node_modules/
