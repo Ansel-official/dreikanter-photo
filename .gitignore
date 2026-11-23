@@ -15,3 +15,4 @@ android/debug.keystore
 # 系统
 .DS_Store
 Thumbs.db
+android/build.bom.ps1
