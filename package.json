@@ -1,0 +1,53 @@
+{
+  "name": "dreikanter-photo",
+  "productName": "Dreikanter photo",
+  "version": "18.0.0",
+  "description": "双模式图像工作台 · Photoshop 模式 / Apsis 模式（纯前端、离线可用）",
+  "author": {
+    "name": "Apsis severs & Ansel Design"
+  },
+  "license": "MIT",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "serve": "node tests/serve.js 8787",
+    "test": "node tests/run.js",
+    "test:shots": "node tests/run.js --shots",
+    "dist:win": "electron-builder --win portable --x64",
+    "dist:win:dir": "electron-packager . \"Dreikanter photo\" --platform=win32 --arch=x64 --out=dist --overwrite --asar --app-version=18.0.0 --icon=icons/icon-512.png --ignore=\"^/(dist|node_modules|\\.git|\\.tmp.*|android|final.*\\.png|test-report\\.txt|shots)($|/)\""
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "electron-packager": "^17.1.2"
+  },
+  "build": {
+    "appId": "design.ansel.dreikanter",
+    "productName": "Dreikanter photo",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "manifest.webmanifest",
+      "sw.js",
+      "css/**/*",
+      "js/**/*",
+      "icons/**/*",
+      "electron/**/*",
+      "tests/smoke.js",
+      "LICENSE",
+      "README.md"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "icons/icon-512.png",
+      "artifactName": "Dreikanter-photo-${version}-win-x64.exe"
+    },
+    "portable": {
+      "artifactName": "Dreikanter-photo-${version}-win-x64.exe"
+    }
+  }
+}

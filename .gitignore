@@ -1,7 +1,17 @@
-# ??????? / ????
+# 临时浏览器档案 / 自检产物
 .tmp-*-profile/
 .tmp-*.png
 tests/last-run.txt
 tests/run-*.txt
 tmp-*.cjs
+
+# 依赖与构建产物
 node_modules/
+dist/
+android/build/
+android/assets/
+android/debug.keystore
+
+# 系统
+.DS_Store
+Thumbs.db

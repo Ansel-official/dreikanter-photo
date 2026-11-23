@@ -7,6 +7,24 @@
 
 ---
 
+## 安装包（Release）
+
+| 平台 | 产物 | 说明 |
+|---|---|---|
+| Windows | `Dreikanter-photo-18.0-win-x64.exe` | Electron 便携版，双击即用，无需安装 |
+| Android | `Dreikanter-photo-18.0-android.apk` | WebView 壳，侧载安装（debug 签名） |
+
+从 [Releases](../../releases) 下载，或本地自己打：
+
+```bash
+npm install
+npm run dist:win                 # → dist/Dreikanter-photo-18.0-win-x64.exe
+
+powershell -ExecutionPolicy Bypass -File android/build.ps1   # → dist/android/*.apk
+```
+
+打 APK 需要 JDK 17 + Android SDK（`build-tools;34.0.0` + `platforms;android-34`），详见 [android/README.md](android/README.md)。
+
 ## 快速开始
 
 - **直接使用**：双击 `index.html`（`file://` 可用，存档降级为会话内，PWA 自动跳过）。

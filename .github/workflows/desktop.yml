@@ -1,0 +1,37 @@
+name: desktop
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  windows-portable:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 安装依赖
+        run: npm install --no-audit --no-fund
+
+      - name: 语法检查（所有 JS）
+        shell: pwsh
+        run: |
+          Get-ChildItem js\*.js, tests\*.js, electron\*.js, sw.js | ForEach-Object {
+            & node --check $_.FullName
+            if ($LASTEXITCODE -ne 0) { throw "语法错误：$($_.Name)" }
+          }
+
+      - name: 打 Windows 便携版 exe
+        run: npm run dist:win
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dreikanter-photo-win-x64
+          path: dist/*.exe
+          if-no-files-found: error
