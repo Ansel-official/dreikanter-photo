@@ -1553,9 +1553,15 @@
       const b1 = { ...App.selection.bounds };
       applySelectionRefine({ feather: 0, expand: -10 });
       const b2 = { ...App.selection.bounds };
-      if (!(b1.w > b0.w + 10)) throw new Error('扩展无效 ' + b0.w + '→' + b1.w);
-      if (!(b2.w < b1.w - 10)) throw new Error('收缩无效 ' + b1.w + '→' + b2.w);
-      return '60 → ' + Math.round(b1.w) + ' → ' + Math.round(b2.w);
+      /* 半径语义必须精确：+8px = 每边外扩 8，-10px = 每边内收 10（chamfer 误差 ≤2px） */
+      if (Math.abs(b1.w - (b0.w + 16)) > 3) throw new Error('扩展后宽 ' + b1.w + '，应为 ' + (b0.w + 16));
+      if (Math.abs(b1.h - (b0.h + 16)) > 3) throw new Error('扩展后高 ' + b1.h + '，应为 ' + (b0.h + 16));
+      if (Math.abs(b2.w - (b1.w - 20)) > 4) throw new Error('收缩后宽 ' + b2.w + '，应为 ' + (b1.w - 20));
+      const area = maskArea(App.selection.mask);
+      const box = b2.w * b2.h;
+      if (Math.abs(area - box) > box * 0.12) throw new Error('收缩后面积 ' + area + '，边界框 ' + Math.round(box));
+      if (!(area > 2000)) throw new Error('收缩过度 ' + area);
+      return Math.round(b0.w) + ' → ' + Math.round(b1.w) + ' → ' + Math.round(b2.w);
     });
 
     await t('选区 · 保存与载入', async () => {

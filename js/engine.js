@@ -610,8 +610,9 @@ function refineMask(mask, opts = {}) {
     for (let y = 0, i = 0; y < h; y++) {
       for (let x = 0; x < w; x++, i++) {
         const v = solid(i) ? 1 : 0;
-        if (grow) d[i] = v ? BIG : 0;
-        else if (!v) d[i] = BIG;
+        /* 距离场种子：膨胀 = 到选区内最近像素的距离；收缩 = 到选区外/边界最近像素的距离 */
+        if (grow) d[i] = v ? 0 : BIG;
+        else if (!v) d[i] = 0;
         else {
           const edge = x === 0 || y === 0 || x === w - 1 || y === h - 1 ||
             !solid(i - 1) || !solid(i + 1) || !solid(i - w) || !solid(i + w);
