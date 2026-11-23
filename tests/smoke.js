@@ -1110,14 +1110,19 @@
       return Math.round(mm) + 'mm ↔ 1000px';
     });
 
-    await t('标尺 · 五种单位与角块联动', () => {
+    await t('标尺 · 五种单位与角块联动', async () => {
       const before = Guides.unit;
       Guides.setUnit('mm');
       const corner = document.getElementById('rulerCorner');
       if (Guides.unit !== 'mm') throw new Error('setUnit 未生效');
       if (corner.textContent.trim() !== 'mm') throw new Error('角块显示 ' + corner.textContent);
-      corner.click(); /* 点击角块循环切换 */
-      if (Guides.unit === 'mm') throw new Error('角块点击未切换单位');
+      /* 点击角块 = 单位下拉，选中 in 后角块同步 */
+      corner.click(); await wait(100);
+      const item = [...document.querySelectorAll('.ctx-menu .ctx-item')].find(b => /（in）/.test(b.textContent));
+      if (!item) throw new Error('角块菜单里没有 in');
+      item.click(); await wait(60);
+      if (Guides.unit !== 'in') throw new Error('下拉选择未生效：' + Guides.unit);
+      if (corner.textContent.trim() !== 'in') throw new Error('角块未同步：' + corner.textContent);
       Guides.setUnit(before || 'px');
       return Units.list.map(u => u[0]).join('/');
     });
@@ -1832,8 +1837,11 @@
       const srcs = $$('script[src]').map(s => s.getAttribute('src'));
       const missing = srcs.filter(s => !txt.includes("'" + s + "'"));
       if (missing.length) throw new Error('未缓存：' + missing.join(', '));
-      if (!/dreikanter-v10/.test(txt)) throw new Error('SW 版本未升级');
-      return srcs.length + ' 个脚本已覆盖';
+      /* SW 版本必须与 APP_VERSION 同代，否则离线用户会拿到旧代码 */
+      const swVer = (txt.match(/const VERSION\s*=\s*'dreikanter-v(\d+)/) || [])[1];
+      const appVer = (APP_VERSION.match(/^v(\d+)/) || [])[1];
+      if (swVer !== appVer) throw new Error('SW v' + swVer + ' 与 APP ' + APP_VERSION + ' 不同代');
+      return srcs.length + ' 个脚本 · v' + swVer;
     });
 
     await t('工程 · 版本号单一来源', () => {
@@ -1851,6 +1859,198 @@
         .filter(m => m !== '自检用错误');
       if (errs.length) throw new Error(errs.slice(0, 3).join(' ｜ '));
       return '0 条';
+    });
+
+    /* ================= X v11 · .cube LUT / 视图与选区细节 ================= */
+    const cubeText = (size, fn) => {
+      const rows = ['TITLE "test ' + size + '"', 'LUT_3D_SIZE ' + size];
+      for (let b = 0; b < size; b++) {
+        for (let g = 0; g < size; g++) {
+          for (let r = 0; r < size; r++) {
+            const v = [r / (size - 1), g / (size - 1), b / (size - 1)].map(fn);
+            rows.push(v.map(x => x.toFixed(6)).join(' '));
+          }
+        }
+      }
+      return rows.join('\n');
+    };
+    const idn = v => v;
+
+    await t('LUT · .cube 解析（3³ identity）', () => {
+      const lut = parseCube(cubeText(3, idn));
+      if (lut.size !== 3) throw new Error('size=' + lut.size);
+      if (lut.data.length !== 81) throw new Error('数据长度 ' + lut.data.length);
+      if (lut.data[0] !== 0) throw new Error('首值 ' + lut.data[0]);
+      if (lut.data[80] !== 255) throw new Error('末值 ' + lut.data[80]);
+      if (lut.data[3] !== 128) throw new Error('第二格红通道 ' + lut.data[3]);
+      return '3³ · 81 字节';
+    });
+
+    await t('LUT · 三线性采样精度（17³ identity）', () => {
+      const lut = parseCube(cubeText(17, idn));
+      const out = [0, 0, 0];
+      const cases = [[0.25, 0.5, 0.75], [0.103, 0.887, 0.4], [1, 1, 1], [0, 0, 0]];
+      for (const [r, g, b] of cases) {
+        sampleCube(lut, r, g, b, out);
+        if (Math.abs(out[0] - r) > 1 / 255 || Math.abs(out[1] - g) > 1 / 255 || Math.abs(out[2] - b) > 1 / 255) {
+          throw new Error('采样偏差 ' + out.map(v => v.toFixed(3)).join(',') + ' vs ' + [r, g, b].join(','));
+        }
+      }
+      /* 自定义 domain：DOMAIN_MAX=2 时 0.5 输入只落在 1/4 处（归一化正确性） */
+      const lut2 = parseCube('LUT_3D_SIZE 2\nDOMAIN_MIN 0 0 0\nDOMAIN_MAX 2 2 2\n' +
+        '0 0 0\n1 0 0\n0 1 0\n1 1 0\n0 0 1\n1 0 1\n0 1 1\n1 1 1\n');
+      sampleCube(lut2, 0.5, 0.5, 0.5, out);
+      if (Math.abs(out[0] - 0.25) > 0.01) throw new Error('DOMAIN 归一化错误 ' + out[0].toFixed(3) + '（应 0.25）');
+      return '4 点 ±1/255 · DOMAIN 归一化';
+    });
+
+    await t('LUT · 非法文件给出可读错误', () => {
+      let e1 = '', e2 = '', e3 = '';
+      try { parseCube(''); } catch (e) { e1 = e.message; }
+      try { parseCube('0 0 0\n1 1 1'); } catch (e) { e2 = e.message; }
+      try { parseCube('LUT_3D_SIZE 2\n0 0 0\n1 1 1'); } catch (e) { e3 = e.message; }
+      if (!/空/.test(e1)) throw new Error('空文件未报错：' + e1);
+      if (!/LUT_3D_SIZE/.test(e2)) throw new Error('缺尺寸未报错：' + e2);
+      if (!/不足/.test(e3)) throw new Error('数据不足未报错：' + e3);
+      return e1 + ' / ' + e2 + ' / ' + e3;
+    });
+
+    await t('LUT · 导入 / 列出 / 删除（存储往返）', () => {
+      CVL.clear();
+      const rec = CVL.add('测试反相', cubeText(3, v => 1 - v));
+      if (!/^cube:/.test(rec.id)) throw new Error('id 前缀 ' + rec.id);
+      const list = CVL.list();
+      if (list.length !== 1 || list[0].name !== '测试反相' || list[0].size !== 3) throw new Error('列表不对 ' + JSON.stringify(list));
+      const lut = CVL.get(rec.id);
+      if (!lut || lut.data.length !== 81) throw new Error('取回失败');
+      if (lut.data[0] !== 255 || lut.data[80] !== 0) throw new Error('取回数据不匹配 ' + lut.data[0] + ',' + lut.data[80]);
+      CVL.remove(rec.id);
+      if (CVL.list().length !== 0) throw new Error('删除后仍有 ' + CVL.list().length);
+      return '保存 ' + Math.round(cubeText(3, v => 1 - v).length / 1024) + 'KB 文本往返';
+    });
+
+    await t('LUT · 自定义 LUT 应用到图层', async () => {
+      CVL.clear();
+      newDocument(20, 20, { bg: '#336699' }); await wait(80);
+      const rec = CVL.add('反相 LUT', cubeText(3, v => 1 - v));
+      applyFilterDirect(FX.cameraLook, { look: rec.id, intensity: 100 }, 'LUT 反相');
+      await wait(80);
+      const p = px(activeLayer().canvas, 10, 10);
+      if (Math.abs(p[0] - 204) > 3 || Math.abs(p[1] - 153) > 3 || Math.abs(p[2] - 102) > 3) {
+        throw new Error('像素 ' + p.join(',') + '（应为 204,153,102）');
+      }
+      return p.slice(0, 3).join(',');
+    });
+
+    await t('LUT · 强度混合 50%', async () => {
+      newDocument(20, 20, { bg: '#336699' }); await wait(80);
+      const rec = CVL.list()[0] || CVL.add('反相 LUT', cubeText(3, v => 1 - v));
+      applyFilterDirect(FX.cameraLook, { look: rec.id, intensity: 50 }, 'LUT 半强度');
+      await wait(80);
+      const p = px(activeLayer().canvas, 10, 10);
+      /* 原 51 → 反相 204，一半 = 127.5 */
+      if (Math.abs(p[0] - 128) > 4) throw new Error('半强度 ' + p[0] + '（应 ≈128）');
+      return p.slice(0, 3).join(',');
+    });
+
+    await t('LUT · 导入对话框与列表交互', async () => {
+      await fresh();
+      CVL.clear();
+      CVL.add('对话框测试', cubeText(3, idn));
+      Dialogs.cubeLut(); await wait(200);
+      const m = document.querySelector('.modal');
+      if (!m) throw new Error('对话框未打开');
+      const txt = m.textContent;
+      if (!/自定义 LUT/.test(txt)) throw new Error('标题缺失');
+      if (!/导入 \.cube 文件/.test(txt)) throw new Error('缺导入按钮');
+      if (!/对话框测试/.test(txt)) throw new Error('列表未显示已导入 LUT');
+      const del = [...m.querySelectorAll('button[title="删除"]')][0];
+      if (!del) throw new Error('缺删除按钮');
+      del.click(); await wait(80);
+      if (CVL.list().length !== 0) throw new Error('删除未生效');
+      const close = m.querySelector('.modal-close');
+      if (close) close.click();
+      return '导入/列表/删除';
+    });
+
+    await t('LUT · 相机 LUT 对话框含自定义项', async () => {
+      CVL.clear();
+      const rec = CVL.add('我的胶片', cubeText(3, v => v));
+      Dialogs.cameraLut(); await wait(200);
+      const sel = document.querySelector('.modal select');
+      if (!sel) throw new Error('没有风格下拉');
+      const opt = [...sel.options].find(o => o.value === rec.id);
+      if (!opt) throw new Error('自定义 LUT 未进下拉：' + [...sel.options].map(o => o.value).join(','));
+      if (!/my|我的胶片/.test(opt.textContent)) throw new Error('选项文案 ' + opt.textContent);
+      const close = document.querySelector('.modal-close');
+      if (close) close.click();
+      CVL.clear();
+      return [...sel.options].length + ' 个风格';
+    });
+
+    await t('裁剪 · 自定义比例 5:4 生效', () => {
+      Tools.state.crop.cw = 5; Tools.state.crop.ch = 4;
+      const r = Tools.constrainCrop({ x: 0, y: 0, w: 100, h: 100 }, 'custom');
+      if (Math.abs(r.w / r.h - 1.25) > 0.02) throw new Error('比例 ' + (r.w / r.h).toFixed(3));
+      const r2 = Tools.constrainCrop({ x: 0, y: 0, w: 100, h: 50 }, 'custom');
+      if (Math.abs(r2.w - 62.5) > 0.5) throw new Error('宽度未按比例收 = ' + r2.w.toFixed(1));
+      Tools.state.crop.cw = 16; Tools.state.crop.ch = 9;
+      const r3 = Tools.constrainCrop({ x: 0, y: 0, w: 100, h: 100 }, 'custom');
+      if (Math.abs(r3.w / r3.h - 16 / 9) > 0.02) throw new Error('改比值后未生效');
+      Tools.state.crop.cw = 5; Tools.state.crop.ch = 4;
+      return '5:4 → 16:9 生效';
+    });
+
+    await t('标尺 · 角块下拉切换单位', async () => {
+      closeContextMenu();
+      const corner = document.getElementById('rulerCorner');
+      if (!corner) throw new Error('缺角块');
+      Guides.setUnit('px');
+      corner.click(); await wait(120);
+      const menu = document.querySelector('.ctx-menu');
+      if (!menu) throw new Error('点击角块没有弹出菜单');
+      const items = [...menu.querySelectorAll('.ctx-item')].map(b => b.textContent);
+      const units = items.filter(t2 => /px|mm|in|%|pt/.test(t2));
+      if (units.length < 5) throw new Error('菜单只有 ' + units.length + ' 个单位项');
+      const inItem = [...menu.querySelectorAll('.ctx-item')].find(b => /（in）/.test(b.textContent));
+      if (!inItem) throw new Error('缺 in 选项');
+      inItem.click(); await wait(80);
+      if (Guides.unit !== 'in') throw new Error('单位未切换：' + Guides.unit);
+      if (corner.textContent.trim() !== 'in') throw new Error('角块未同步：' + corner.textContent);
+      Guides.setUnit('px');
+      return units.length + ' 个单位项';
+    });
+
+    await t('精修选区 · 扩展边界带 1px 抗锯齿', async () => {
+      newDocument(160, 160, { bg: '#ffffff' }); await wait(60);
+      Tools.makeRectSelection({ x: 50, y: 50, w: 60, h: 60 }, 'rect', 'new');
+      applySelectionRefine({ feather: 0, expand: 8 });
+      const d = ctx2d(App.selection.mask).getImageData(0, 0, 160, 160).data;
+      let soft = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 0 && d[i] < 255) soft++;
+      /* 76×76 的边界周长约 300，抗锯齿每边应有一圈过渡像素 */
+      if (soft < 200) throw new Error('过渡像素只有 ' + soft + ' 个（边界仍是硬切）');
+      return soft + ' 个过渡像素';
+    });
+
+    await t('蚂蚁线 · 虚线长度与缩放无关', async () => {
+      newDocument(200, 200, { bg: '#ffffff' }); await wait(60);
+      selectAll();
+      const z0 = App.view.zoom;
+      const rows = [];
+      for (const z of [0.25, 1, 3]) {
+        App.view.zoom = z;
+        drawOverlay();
+        const info = App.antsInfo;
+        if (!info) throw new Error('没有 antsInfo');
+        const screenDash = info.dashDoc * z;
+        const screenLw = info.lw * z;
+        if (Math.abs(screenDash - 4) > 0.01) throw new Error('z=' + z + ' 屏幕虚线 ' + screenDash.toFixed(2) + 'px');
+        if (Math.abs(screenLw - 1) > 0.01) throw new Error('z=' + z + ' 线宽 ' + screenLw.toFixed(2) + 'px');
+        rows.push(z + '×:' + screenDash.toFixed(1));
+      }
+      App.view.zoom = z0; invalidateOverlay();
+      return rows.join(' / ');
     });
 
     await fresh();

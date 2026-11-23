@@ -587,13 +587,123 @@ const Dialogs = {
 
   cameraLut(preset) {
     const ids = (typeof LOOK_IDS !== 'undefined') ? LOOK_IDS : ['hasselblad'];
+    const custom = (typeof CVL !== 'undefined') ? CVL.list() : [];
+    const opts = ids.map(id => [id, CAMERA_LOOKS[id].name + ' · ' + CAMERA_LOOKS[id].en])
+      .concat(custom.map(c => [c.id, '⌁ ' + c.name + ' · .cube ' + c.size + '³']));
     this.adjust('相机 LUT', [
       {
         key: 'look', label: '风格', type: 'select', def: preset || 'hasselblad',
-        options: ids.map(id => [id, CAMERA_LOOKS[id].name + ' · ' + CAMERA_LOOKS[id].en])
+        options: opts
       },
       { key: 'intensity', label: '强度', min: 0, max: 100, def: 100 }
-    ], FX.cameraLook, '哈苏 / 大疆 / 影石 / 徕卡 / 富士');
+    ], FX.cameraLook, '内置 5 套相机风格 + 导入的 .cube');
+  },
+
+  /* 自定义 LUT（.cube）导入与管理 */
+  cubeLut() {
+    const listWrap = h('div', { class: 'exp-list' });
+    const renderList = () => {
+      listWrap.innerHTML = '';
+      const rows = (typeof CVL !== 'undefined') ? CVL.list() : [];
+      if (!rows.length) {
+        listWrap.append(h('div', { class: 'hint' }, '还没有自定义 LUT。点上面的「导入 .cube 文件…」。'));
+        return;
+      }
+      rows.forEach(r => {
+        listWrap.append(h('div', { class: 'exp-row' },
+          h('span', { class: 'exp-dot done' }),
+          h('div', { style: { flex: '1', minWidth: '0' } },
+            h('div', { style: { fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, r.name),
+            h('div', { class: 'hint', style: { marginTop: '1px' } }, r.size + '³ · ' + fmtTime(r.at))
+          ),
+          h('button', {
+            class: 'icon-btn', title: '应用到当前图层', html: icon('check', 12),
+            onclick: () => { this._applyCube(r.id, r.name); }
+          }),
+          h('button', {
+            class: 'icon-btn', title: '删除', html: icon('close', 12),
+            onclick: () => {
+              CVL.remove(r.id);
+              toast('已删除 ' + r.name);
+              renderList();
+            }
+          })
+        ));
+      });
+    };
+    const fileInput = h('input', {
+      type: 'file', accept: '.cube,text/plain', style: { display: 'none' },
+      onchange: async e => {
+        const f = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!f) return;
+        try {
+          const txt = await f.text();
+          const rec = CVL.add(f.name, txt);
+          toast('已导入 ' + rec.name + '（' + rec.size + '³）', 'ok');
+          renderList();
+        } catch (err) {
+          toast('导入失败：' + err.message, 'err');
+        }
+      }
+    });
+    const m = modal({
+      title: '自定义 LUT', sub: '.cube', width: 460,
+      body: [
+        h('div', { class: 'hint' }, '支持 Adobe Cube 3D LUT（尺寸 2–65，常见 17/33/65）。导入后可像内置风格一样用强度混合，也会出现在「相机 LUT…」的风格列表里。'),
+        h('div', { class: 'exp-bar', style: { margin: '8px 0' } },
+          h('button', {
+            class: 'btn primary', style: { flex: '1' },
+            onclick: () => fileInput.click()
+          }, '导入 .cube 文件…'),
+          h('button', {
+            class: 'btn ghost', style: { flex: '0 0 auto' },
+            onclick: () => this._pasteLut(renderList)
+          }, '粘贴文本')
+        ),
+        listWrap,
+        fileInput
+      ],
+      actions: [{ label: '关闭', ghost: true }]
+    });
+    renderList();
+    return m;
+  },
+
+  /* 从粘贴文本导入 .cube（不依赖文件选择器，也方便自检） */
+  _pasteLut(onDone) {
+    const ta = h('textarea', { class: 'ta', rows: 8, spellcheck: 'false', placeholder: 'LUT_3D_SIZE 33\n0.0 0.0 0.0\n……' });
+    const name = h('input', { class: 'opt-field', type: 'text', placeholder: 'LUT 名称（可留空）' });
+    const sub = modal({
+      title: '粘贴 .cube 文本', sub: '3D LUT', width: 460,
+      body: [
+        h('div', { class: 'field-row' }, fieldEl('名称', name)),
+        ta,
+        h('div', { class: 'hint' }, '第一行建议写 LUT_3D_SIZE；数据行每行三个 0–1 浮点数，红色变化最快（r 在最内层）。')
+      ],
+      actions: [
+        { label: '取消', ghost: true },
+        {
+          label: '导入', primary: true, onClick: () => {
+            try {
+              const rec = CVL.add(name.value || '粘贴的 LUT', ta.value);
+              toast('已导入 ' + rec.name + '（' + rec.size + '³）', 'ok');
+              sub.close();
+              if (typeof onDone === 'function') onDone();
+            } catch (err) {
+              toast('导入失败：' + err.message, 'err');
+            }
+          }
+        }
+      ]
+    });
+    return sub;
+  },
+
+  /* 应用到当前图层（供列表按钮调用） */
+  _applyCube(id, name) {
+    applyFilterDirect(FX.cameraLook, { look: id, intensity: 100 }, 'LUT ' + name);
+    toast('已应用 LUT：' + name, 'ok');
   },
 
   adjustBrightness() {

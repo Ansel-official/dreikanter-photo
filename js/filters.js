@@ -178,16 +178,18 @@ const FX = {
     return img;
   },
 
-  /* 相机 LUT（哈苏/大疆/影石/徕卡/富士） */
+  /* 相机 LUT（哈苏/大疆/影石/徕卡/富士）或导入的 .cube 自定义 LUT */
   cameraLook(img, p) {
-    const id = (typeof CAMERA_LOOKS !== 'undefined' && CAMERA_LOOKS[p.look]) ? p.look : 'hasselblad';
+    const custom = (typeof CVL !== 'undefined' && p.look) ? CVL.get(p.look) : null;
+    const id = (!custom && typeof CAMERA_LOOKS !== 'undefined' && CAMERA_LOOKS[p.look]) ? p.look : 'hasselblad';
     const amt = (p.intensity == null ? 100 : p.intensity) / 100;
     const d = img.data;
     const out = [0, 0, 0];
     for (let i = 0; i < d.length; i += 4) {
       if (d[i + 3] === 0) continue;
       const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
-      lookPixel(id, r, g, b, out);
+      if (custom) sampleCube(custom, r, g, b, out);
+      else lookPixel(id, r, g, b, out);
       if (amt >= .999) {
         d[i] = out[0] * 255; d[i + 1] = out[1] * 255; d[i + 2] = out[2] * 255;
       } else {

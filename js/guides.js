@@ -72,7 +72,7 @@ const Guides = {
     const rc = $('#rulerCorner');
     if (!rc) return;
     rc.textContent = this.angleDraft ? Math.round(this.angleDraft.a) + '°' : this.unit;
-    rc.title = this.angleDraft ? '参考线角度（Shift 吸附 45°）' : '标尺单位：点击切换（px → mm → in → % → pt）';
+    rc.title = this.angleDraft ? '参考线角度（Shift 吸附 45°）' : '标尺单位：点击选择（px / mm / in / % / pt）';
     rc.classList.toggle('angled', !!this.angleDraft);
   },
 
@@ -417,7 +417,25 @@ const Guides = {
     this._bound = true;
 
     const corner = $('#rulerCorner');
-    if (corner) corner.addEventListener('click', () => this.cycleUnit());
+    if (corner) {
+      /* 点角块 = 单位下拉（对齐 PS 的「双击标尺切换单位」，但这里给完整列表） */
+      corner.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const items = Units.list.map(([v, l]) => ({
+          label: (this.unit === v ? '✓ ' : '　') + l + '（' + v + '）',
+          fn: () => this.setUnit(v)
+        }));
+        items.push(
+          { sep: 1 },
+          { label: '参考线 / 网格 / 标尺…', key: '', fn: () => this.settings() },
+          { label: (App.showGrid ? '✓ ' : '　') + '显示网格', fn: () => { App.showGrid = !App.showGrid; invalidateOverlay(); } },
+          { label: (this.lock ? '✓ ' : '　') + '锁定参考线', fn: () => this.toggleLock() }
+        );
+        const r = corner.getBoundingClientRect();
+        contextMenu(r.left, r.bottom + 4, items);
+      });
+    }
 
     const beginFromRuler = axis => e => {
       if (!this.rulersOn()) return;

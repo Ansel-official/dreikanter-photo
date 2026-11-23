@@ -108,6 +108,7 @@ const MENUS = [
       { label: '徕卡 · 浓郁红调', fn: () => applyFilterDirect(FX.cameraLook, { look: 'leica', intensity: 100 }, 'LUT 徕卡') },
       { label: '富士 · 经典铬', fn: () => applyFilterDirect(FX.cameraLook, { look: 'fuji', intensity: 100 }, 'LUT 富士') },
       { label: '相机 LUT…（可调强度）', fn: () => Dialogs.cameraLut() },
+      { label: '导入 .cube LUT…', fn: () => Dialogs.cubeLut() },
       { label: '自动白平衡', fn: () => applyFilterDirect(FX.autoWhiteBalance, { strength: 100 }, '自动白平衡') },
       { sep: 1 },
       { cap: '模糊与锐化' },

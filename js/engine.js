@@ -414,21 +414,27 @@ function drawOverlay() {
   }
   if (App.selection && (App.selection.antPath || App.selection.path)) {
     const ap = App.selection.antPath || App.selection.path;
+    /* 蚂蚁线：虚线长度固定在「屏幕像素」，不随缩放变长；+0.5 像素对齐设备格，
+       避免非整数缩放/平移时逐帧抖动 */
+    const dash = 4, gap = 4, cycle = dash + gap;
+    const lw = 1 / z;
+    App.antsInfo = { z: +z.toFixed(3), lw, dashDoc: dash / z, gapDoc: gap / z };
     ctx.save();
-    ctx.lineWidth = 1;
     ctx.setLineDash([]);
     ctx.strokeStyle = (typeof Settings !== 'undefined' && Settings.data && Settings.data.antsColor) ? Settings.data.antsColor : 'rgba(255,255,255,.95)';
     ctx.save();
     ctx.scale(z, z);
-    ctx.lineWidth = 1 / z;
+    ctx.translate(0.5 * lw, 0.5 * lw);
+    ctx.lineWidth = lw;
     ctx.stroke(ap);
     ctx.restore();
-    ctx.setLineDash([4, 4]);
+    ctx.setLineDash([dash / z, gap / z]);
     ctx.strokeStyle = 'rgba(0,0,0,.95)';
-    ctx.lineDashOffset = -((performance.now() / 70) % 8);
+    ctx.lineDashOffset = -((performance.now() / 70) % cycle) / z;
     ctx.save();
     ctx.scale(z, z);
-    ctx.lineWidth = 1 / z;
+    ctx.translate(0.5 * lw, 0.5 * lw);
+    ctx.lineWidth = lw;
     ctx.stroke(ap);
     ctx.restore();
     ctx.restore();
@@ -647,7 +653,9 @@ function refineMask(mask, opts = {}) {
       }
     }
     for (let i = 0; i < N; i++) {
-      a[i * 4 + 3] = grow ? (d[i] <= R + 0.5 ? 255 : 0) : (d[i] > R ? 255 : 0);
+      /* 1px 抗锯齿过渡：边界不再硬切，缩放到 100% 以上也不会出现锯齿阶梯 */
+      const soft = grow ? (R + 0.5 - d[i]) : (d[i] - R + 0.5);
+      a[i * 4 + 3] = soft <= 0 ? 0 : soft >= 1 ? 255 : Math.round(soft * 255);
     }
     c.putImageData(img, 0, 0);
   } else {
