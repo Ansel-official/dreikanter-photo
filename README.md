@@ -11,10 +11,17 @@
 
 | 平台 | 产物 | 说明 |
 |---|---|---|
-| Windows | `Dreikanter-photo-18.0-win-x64.exe` | Electron 便携版，双击即用，无需安装 |
-| Android | `Dreikanter-photo-18.0-android.apk` | WebView 壳，侧载安装（debug 签名） |
+| Windows | `Dreikanter-photo-18.0.0-win-x64.exe`（71 MB） | Electron 33 便携版，双击即用，无需安装 |
+| Android | `Dreikanter-photo-18.0-android.apk`（0.96 MB） | WebView 壳，`minSdk 24 / target 34`，侧载安装（debug 签名，v2+v3） |
 
-从 [Releases](../../releases) 下载，或本地自己打：
+直达下载：
+
+- Windows：<https://github.com/Ansel-official/dreikanter-photo/releases/download/v18.0/Dreikanter-photo-18.0.0-win-x64.exe>
+- Android：<https://github.com/Ansel-official/dreikanter-photo/releases/download/v18.0/Dreikanter-photo-18.0-android.apk>
+
+两个包都由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在推 `v*` 标签时自动构建并挂到 Release（APK 走 aapt2 + javac + d8 + zipalign + apksigner，不依赖 Gradle）。
+
+也可以本地自己打：
 
 ```bash
 npm install
