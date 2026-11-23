@@ -1121,6 +1121,17 @@ async function exportImageAsync(job = {}) {
   const scale = job.scale || 1;
   const isJpg = type === 'image/jpeg';
   let cv = compositeCanvas(isJpg, isJpg ? (App.doc.bg !== 'transparent' ? App.doc.bg : '#ffffff') : null);
+  if (job.crop && job.crop.w >= 2 && job.crop.h >= 2) {
+    /* 视口导出：按文档坐标裁一块，1:1 输出 */
+    const c0 = job.crop;
+    const w0 = Math.max(1, Math.round(c0.w)), h0 = Math.max(1, Math.round(c0.h));
+    const out0 = makeCanvas(w0, h0);
+    const x0 = ctx2d(out0);
+    if (isJpg) { x0.fillStyle = (App.doc.bg !== 'transparent' ? App.doc.bg : '#ffffff'); x0.fillRect(0, 0, w0, h0); }
+    x0.imageSmoothingQuality = 'high';
+    x0.drawImage(cv, Math.round(c0.x), Math.round(c0.y), w0, h0, 0, 0, w0, h0);
+    cv = out0;
+  }
   if (job.box && job.box.w && job.box.h) {
     const out = makeCanvas(job.box.w, job.box.h);
     const x = ctx2d(out);
@@ -1143,6 +1154,30 @@ async function exportImageAsync(job = {}) {
   const name = job.name || (exportName(baseName(App.doc.name), job.box, scale) + ext);
   downloadBlob(blob, name);
   return { blob, name };
+}
+
+/** 当前视图里可见的文档矩形（doc 坐标），不可见时返回 null */
+function viewportRect() {
+  const stage = document.getElementById('stage');
+  if (!stage || !App.doc.w) return null;
+  const r = stage.getBoundingClientRect();
+  const z = App.view.zoom || 1;
+  const x = App.view.cx - r.width / (2 * z);
+  const y = App.view.cy - r.height / (2 * z);
+  const x0 = Math.max(0, x), y0 = Math.max(0, y);
+  const x1 = Math.min(App.doc.w, x + r.width / z), y1 = Math.min(App.doc.h, y + r.height / z);
+  const outW = x1 - x0, outH = y1 - y0;
+  if (outW < 2 || outH < 2) return null;
+  return { x: Math.round(x0), y: Math.round(y0), w: Math.round(outW), h: Math.round(outH) };
+}
+
+/** 导出当前视图（可见区域 1:1） */
+function exportViewport(type = 'image/png') {
+  const rect = viewportRect();
+  if (!rect) { toast('视图里没有可见画布', 'err'); return null; }
+  exportImage(type, .92, null, 1, null, rect);
+  toast('导出当前视图 ' + rect.w + ' × ' + rect.h + ' px', 'ok');
+  return rect;
 }
 
 /* 导出前检查：画布过大 / 空图层 / 超出上限 */
@@ -1168,9 +1203,9 @@ function exportPreflight() {
   return issues;
 }
 
-function exportImage(type = 'image/png', quality = .92, filename, scale = 1, box = null) {
+function exportImage(type = 'image/png', quality = .92, filename, scale = 1, box = null, crop = null) {
   if (typeof Progress !== 'undefined') Progress.start('正在导出');
-  exportImageAsync({ type, quality, name: filename, scale, box }).then(res => {
+  exportImageAsync({ type, quality, name: filename, scale, box, crop }).then(res => {
     if (typeof Progress !== 'undefined') Progress.done();
     App.dirty = false;
     if (typeof Docs !== 'undefined') Docs.markSaved();

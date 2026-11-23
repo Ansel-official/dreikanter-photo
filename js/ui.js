@@ -21,6 +21,7 @@ const MENUS = [
       { label: '导出为 JPEG…', fn: () => Dialogs.exportDoc('image/jpeg') },
       { label: '导出为 WEBP…', fn: () => Dialogs.exportDoc('image/webp') },
       { label: '批量处理多张照片…', fn: () => Dialogs.batch() },
+      { label: '导出当前视图…', fn: () => exportViewport() },
       { sep: 1 },
       { label: '返回主页', key: 'Esc', fn: () => showWelcome() },
       { label: '关闭图像', key: 'Ctrl W', fn: () => Dialogs.closeDoc() }

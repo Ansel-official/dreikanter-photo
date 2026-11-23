@@ -131,6 +131,59 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     });
     await shot('final-transform.png');
 
+    /* v13 细节图 3：曲线 */
+    await clean();
+    await send('Runtime.evaluate', {
+      expression: `(() => {
+        newDocument(900, 600, { bg: '#6b7a8f' });
+        const c = ctx2d(activeLayer().canvas);
+        const g = c.createLinearGradient(0, 0, 900, 600);
+        g.addColorStop(0, '#20344a'); g.addColorStop(0.62, '#7d6a86'); g.addColorStop(1, '#e6d3b3');
+        c.fillStyle = g; c.fillRect(0, 0, 900, 600);
+        fitView(); sync(); Dialogs.curves();
+        setTimeout(() => {
+          const b = [...document.querySelectorAll('.modal button')].find(x => /S 曲线/.test(x.textContent));
+          if (b) b.click();
+        }, 260);
+        return 'ok';
+      })()`, returnByValue: true
+    });
+    await sleep(1200);
+    await shot('final-curves.png');
+    await send('Runtime.evaluate', {
+      expression: "const mb = document.querySelector('.modal'); if (mb) { const c2 = mb.querySelector('.modal-close'); if (c2) c2.click(); } 'ok'",
+      returnByValue: true
+    });
+    await sleep(600);
+
+    /* v13 细节图 4：批量处理 */
+    await send('Runtime.evaluate', {
+      expression: `(async () => {
+        const mk = async (w, h, col, name) => {
+          const cv = makeCanvas(w, h); const x = ctx2d(cv);
+          x.fillStyle = col; x.fillRect(0, 0, w, h);
+          const b = await new Promise(r => cv.toBlob(r, 'image/png'));
+          return new File([b], name, { type: 'image/png' });
+        };
+        Batch.clear(); Batch.download = false;
+        Batch.addFiles([
+          await mk(300, 200, '#3a5f8a', 'IMG_2031.png'),
+          await mk(240, 240, '#8a5f3a', 'IMG_2032.png'),
+          await mk(400, 300, '#5f8a3a', 'IMG_2033.png')
+        ]);
+        Dialogs.batch();
+        return 'ok';
+      })()`, awaitPromise: true, returnByValue: true
+    });
+    await sleep(900);
+    await shot('final-batch.png');
+    await send('Runtime.evaluate', {
+      expression: "const mb = document.querySelector('.modal'); if (mb) { const c2 = mb.querySelector('.modal-close'); if (c2) c2.click(); } Batch.clear(); 'ok'",
+      returnByValue: true
+    });
+    await send('Page.navigate', { url: BASE + '/?editor' }); await sleep(2400);
+    await clean();
+
     await clean();
     await send('Runtime.evaluate', { expression: "Settings.set('theme','light',false); fitView(); 'ok'", returnByValue: true });
     await sleep(600);

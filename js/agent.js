@@ -21,6 +21,8 @@ const CMD_GROUPS = [
       { id: 'file.copy', label: '复制合并图像', say: ['复制图像', '拷贝图像'], run: () => copyComposite() },
       { id: 'file.paste', label: '粘贴为图层', say: ['粘贴图像'], run: () => pasteFromClipboard() },
       { id: 'file.demo', label: '载入示例作品', say: ['示例作品', '示例'], run: () => { hideWelcome(); Dialogs.loadDemo(); } },
+      { id: 'file.batch', label: '批量处理多张照片…', say: ['批量处理', '批量修图', '批量导出'], run: () => Dialogs.batch() },
+      { id: 'file.viewport', label: '导出当前视图（可见区域 1:1）', say: ['导出当前视图', '导出可见区域'], run: () => exportViewport() },
       { id: 'file.close', label: '关闭图像', run: () => Dialogs.closeDoc() }
     ]
   },
@@ -95,6 +97,7 @@ const CMD_GROUPS = [
   },
   {
     name: '滤镜', items: [
+      { id: 'fx.curves', label: '曲线…（RGB / 单通道）', hint: 'Ctrl M', say: ['曲线', 's曲线', '拉曲线'], run: () => Dialogs.curves() },
       { id: 'fx.blur', label: '高斯模糊…', say: ['高斯模糊'], run: () => Dialogs.fxBlur() },
       { id: 'fx.motion', label: '动感模糊…', say: ['动感模糊'], run: () => Dialogs.fxMotionBlur() },
       { id: 'fx.sharpen', label: '锐化…', say: ['锐化'], run: () => Dialogs.fxSharpen() },
@@ -110,6 +113,8 @@ const CMD_GROUPS = [
   },
   {
     name: '相机 LUT', items: [
+      { id: 'lut.import', label: '导入 .cube LUT…', say: ['导入lut', '自定义lut', '导入cube'], run: () => Dialogs.cubeLut() },
+      { id: 'lut.manage', label: '相机 LUT…（可选强度）', say: ['相机lut'], run: () => Dialogs.cameraLut() },
       { id: 'lut.hasselblad', label: '哈苏 LUT（自然通透）', say: ['哈苏'], run: () => applyFilterDirect(FX.cameraLook, { look: 'hasselblad', intensity: 100 }, 'LUT 哈苏') },
       { id: 'lut.dji', label: '大疆 LUT（干净青调）', say: ['大疆'], run: () => applyFilterDirect(FX.cameraLook, { look: 'dji', intensity: 100 }, 'LUT 大疆') },
       { id: 'lut.insta360', label: '影石 LUT（运动浓彩）', say: ['影石'], run: () => applyFilterDirect(FX.cameraLook, { look: 'insta360', intensity: 100 }, 'LUT 影石') },
@@ -151,6 +156,11 @@ const CMD_GROUPS = [
       { id: 'view.out', label: '缩小', say: ['缩小'], run: () => setZoom(App.view.zoom / 1.3) },
       { id: 'view.fit', label: '适合屏幕', hint: 'Ctrl 0', say: ['适合屏幕', '适应窗口'], run: () => fitView() },
       { id: 'view.100', label: '实际像素', hint: 'Ctrl 1', say: ['实际像素', '原始大小'], run: () => setZoom(1) },
+      { id: 'view.unit', label: '切换标尺单位（px / mm / in / % / pt）', say: ['标尺单位', '毫米', '英寸'], run: () => Guides.cycleUnit() },
+      { id: 'view.guides', label: '参考线 / 网格 / 标尺设置…', say: ['参考线设置', '网格设置'], run: () => Guides.settings() },
+      { id: 'view.guidesClear', label: '清除全部参考线', say: ['清除参考线', '清空参考线'], run: () => Guides.clear() },
+      { id: 'view.guidesLock', label: '锁定 / 解锁参考线', say: ['锁定参考线'], run: () => Guides.toggleLock() },
+      { id: 'view.transform', label: '自由变换（Ctrl T）', hint: 'Ctrl T', say: ['自由变换', '变形'], run: () => Transform.begin() },
       { id: 'view.grid', label: '显示 / 隐藏网格', say: ['网格'], run: () => { App.showGrid = !App.showGrid; invalidate(true); } },
       { id: 'view.palette', label: '命令面板…', hint: 'Ctrl K', say: ['命令面板'], run: () => UI.openPalette() },
       { id: 'mode.apsis', label: '切换到 Apsis 模式', say: ['apsis模式', '直觉模式'], run: () => setMode('apsis') },

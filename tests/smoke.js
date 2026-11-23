@@ -2243,6 +2243,109 @@
       return 'Ctrl M 直达';
     });
 
+    /* ================= Z v13 · 视口导出 / 指令台 / 单位 ================= */
+    await t('导出 · 视口矩形随缩放与平移变化', async () => {
+      newDocument(1600, 1000, { bg: '#ffffff' }); await wait(120);
+      const a = viewportRect();
+      if (!a) throw new Error('拿不到视口矩形');
+      if (a.x < 0 || a.y < 0 || a.x + a.w > App.doc.w + 1 || a.y + a.h > App.doc.h + 1) {
+        throw new Error('矩形越界 ' + JSON.stringify(a));
+      }
+      setZoom(2); await wait(80);
+      const b = viewportRect();
+      if (!(b.w < a.w)) throw new Error('放大后可视区域没有变小：' + b.w + ' vs ' + a.w);
+      App.view.cx = App.doc.w / 2 - 300; App.view.zoom = 2;
+      layoutFrame();
+      const c = viewportRect();
+      if (!c || c.x <= 0) throw new Error('平移后 x 未跟着变 ' + JSON.stringify(c));
+      fitView(); await wait(60);
+      return a.w + '×' + a.h + ' → ' + b.w + '×' + b.h;
+    });
+
+    await t('导出 · 视口导出按 1:1 裁切', async () => {
+      newDocument(800, 600, { bg: '#ffffff' }); await wait(120);
+      const c = ctx2d(activeLayer().canvas);
+      c.fillStyle = '#ff0000'; c.fillRect(0, 0, 400, 600);
+      c.fillStyle = '#0000ff'; c.fillRect(400, 0, 400, 600);
+      invalidate(); await wait(80);
+      const res = await exportImageAsync({ type: 'image/png', crop: { x: 300, y: 100, w: 200, h: 150 }, name: 'vp.png' });
+      if (!res || !res.blob) throw new Error('没有产出 blob');
+      const bmp = await createImageBitmap(res.blob);
+      if (bmp.width !== 200 || bmp.height !== 150) throw new Error('尺寸 ' + bmp.width + '×' + bmp.height);
+      /* 裁切跨红蓝分界：左边应偏红、右边偏蓝 */
+      const cv = makeCanvas(200, 150);
+      const cc = ctx2d(cv);
+      cc.drawImage(bmp, 0, 0);
+      const left = cc.getImageData(10, 75, 1, 1).data;
+      const right = cc.getImageData(190, 75, 1, 1).data;
+      bmp.close();
+      if (!(left[0] > 200 && left[2] < 60)) throw new Error('左侧像素 ' + left.join(','));
+      if (!(right[2] > 200 && right[0] < 60)) throw new Error('右侧像素 ' + right.join(','));
+      return '200×150 · 红/蓝分区正确';
+    });
+
+    await t('导出 · 视口导出入口可达', () => {
+      const file = MENUS.find(mm => mm.label === '文件');
+      if (!file.items.some(i => /导出当前视图/.test(i.label || ''))) throw new Error('文件菜单缺导出当前视图');
+      if (typeof exportViewport !== 'function') throw new Error('exportViewport 未定义');
+      const rect = exportViewport();
+      if (!rect) throw new Error('exportViewport 返回空');
+      return rect.w + '×' + rect.h;
+    });
+
+    await t('指令 · 新增入口齐全', () => {
+      const ids = COMMANDS.map(c => c.id);
+      const need = ['file.batch', 'file.viewport', 'fx.curves', 'lut.import', 'view.unit', 'view.guides', 'view.guidesClear', 'view.transform'];
+      const miss = need.filter(id => !ids.includes(id));
+      if (miss.length) throw new Error('缺指令 ' + miss.join(','));
+      if (new Set(ids).size !== ids.length) throw new Error('指令 id 有重复');
+      if (COMMANDS.length < 128) throw new Error('指令总数 ' + COMMANDS.length);
+      const say = COMMANDS.find(c => c.id === 'fx.curves').say || [];
+      if (!say.includes('曲线')) throw new Error('曲线口令缺失');
+      return COMMANDS.length + ' 条';
+    });
+
+    await t('指令 · 视图类指令可执行', async () => {
+      const before = Guides.unit;
+      const cmd = COMMANDS.find(c => c.id === 'view.unit');
+      cmd.run();
+      await wait(80);
+      if (Guides.unit === before) throw new Error('切单位没生效');
+      Guides.setUnit(before);
+      const lockCmd = COMMANDS.find(c => c.id === 'view.guidesLock');
+      const l0 = Guides.lock;
+      lockCmd.run(); await wait(60);
+      if (Guides.lock === l0) throw new Error('锁定指令没生效');
+      lockCmd.run(); await wait(60);
+      const clearCmd = COMMANDS.find(c => c.id === 'view.guidesClear');
+      Guides.addX(100); clearCmd.run(); await wait(60);
+      if (Guides.count() !== 0) throw new Error('清除指令没生效');
+      const guiCmd = COMMANDS.find(c => c.id === 'view.guides');
+      guiCmd.run(); await wait(160);
+      const m = document.querySelector('.modal');
+      if (!m) throw new Error('设置指令没打开对话框');
+      const close = m.querySelector('.modal-close');
+      if (close) close.click();
+      await wait(100);
+      return '单位 / 锁定 / 清除 / 设置';
+    });
+
+    await t('导出 · 对话框含 mm/in 换算', async () => {
+      newDocument(1600, 1000, { bg: '#ffffff', dpi: 300 }); await wait(100);
+      Dialogs.exportDoc('image/png'); await wait(200);
+      const line = document.getElementById('expSizeLine');
+      if (!line) throw new Error('缺尺寸行');
+      const t2 = line.textContent;
+      if (!/mm/.test(t2) || !/in/.test(t2) || !/300 ppi/.test(t2)) throw new Error('换算文案 ' + t2);
+      /* 1600px @300dpi = 135.5mm = 5.33in */
+      if (!/135\.5/.test(t2)) throw new Error('mm 值不对 ' + t2);
+      if (!/5\.33/.test(t2)) throw new Error('in 值不对 ' + t2);
+      const close = document.querySelector('.modal-close');
+      if (close) close.click();
+      await wait(80);
+      return t2.replace(/^输出尺寸\s*/, '');
+    });
+
     await fresh();
     const pass = items.filter(i => i.pass).length;
     return {

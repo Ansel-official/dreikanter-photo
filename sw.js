@@ -1,6 +1,6 @@
 /* Dreikanter photo — Service Worker（全量静态缓存，版本化） */
 'use strict';
-const VERSION = 'dreikanter-v12-2026-11-23';
+const VERSION = 'dreikanter-v13-2026-11-23';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest',
   'css/tokens.css', 'css/base.css', 'css/apsis.css', 'css/themes.css', 'css/mobile.css', 'css/polish.css', 'css/ui-kit.css',

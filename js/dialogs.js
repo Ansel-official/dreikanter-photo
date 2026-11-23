@@ -131,7 +131,10 @@ const Dialogs = {
     };
     [nameIn, tplIn, prefixIn].forEach(el => el.oninput = refreshName);
     refreshName();
-    const sizeLine = h('div', { class: 'hint' }, '输出尺寸 ' + fmtInt(App.doc.w) + ' × ' + fmtInt(App.doc.h) + ' px · ' + (App.doc.dpi || 72) + ' ppi');
+    const mmW = Units.fromPx(App.doc.w, 'mm', 'x').toFixed(1), mmH = Units.fromPx(App.doc.h, 'mm', 'y').toFixed(1);
+    const inW = Units.fromPx(App.doc.w, 'in', 'x').toFixed(2), inH = Units.fromPx(App.doc.h, 'in', 'y').toFixed(2);
+    const sizeLine = h('div', { class: 'hint', id: 'expSizeLine' },
+      '输出尺寸 ' + fmtInt(App.doc.w) + ' × ' + fmtInt(App.doc.h) + ' px · ' + mmW + ' × ' + mmH + ' mm · ' + inW + ' × ' + inH + ' in · ' + (App.doc.dpi || 72) + ' ppi');
     const issues = exportPreflight();
     const warn = issues.length
       ? h('div', { class: 'hint', style: { color: '#e8b35a' } }, '导出前检查：' + issues.join(' · '))
