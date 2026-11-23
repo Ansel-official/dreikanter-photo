@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#181818">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dreikanter photo</title>
+<meta name="description" content="Dreikanter photo — 双模式平面设计与修图工作台">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/apsis.css">
+<link rel="stylesheet" href="css/themes.css">
+<link rel="stylesheet" href="css/mobile.css">
+<link rel="stylesheet" href="css/polish.css">
+<link rel="stylesheet" href="css/ui-kit.css">
+</head>
+<body class="mode-ps" data-theme="dark">
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand" id="brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M12 2.5 21 7.4v9.2L12 21.5 3 16.6V7.4z" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M12 2.5v19M3 7.4l9 4.6 9-4.6" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".55"/>
+        </svg>
+      </span>
+      <b>Dreikanter</b><i>photo</i>
+    </div>
+
+    <nav id="menubar" class="menubar"></nav>
+
+    <div class="topbar-right">
+      <button class="ghost-btn" id="installBtn" title="安装到桌面" style="display:none">安装</button>
+      <button class="ghost-btn menu-sheet-btn" id="menuSheetBtn" title="菜单">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <button class="ghost-btn" id="paletteBtn" title="命令面板  Ctrl/⌘ + K">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+        <span>命令</span><kbd>⌘K</kbd>
+      </button>
+
+      <div class="mode-switch" id="modeSwitch" role="tablist">
+        <button data-mode="ps" class="active" role="tab" title="Photoshop 模式  Ctrl/⌘+Shift+M 切换">Photoshop 模式</button>
+        <button data-mode="apsis" role="tab" title="Apsis 模式  Ctrl/⌘+Shift+M 切换">Apsis 模式</button>
+      </div>
+
+      <div class="win-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    </div>
+  </header>
+
+  <div id="tabbar" class="tabbar empty"></div>
+  <div id="progress"><i></i></div>
+  <div id="optionsbar" class="optionsbar"></div>
+
+  <!-- Apsis 顶部：意图栏 -->
+  <div id="apsisTop" class="apsis-only">
+    <div class="apsis-head">
+      <div class="apsis-title">
+        <span class="dot"></span>
+        <span id="apsisDocName">未命名</span>
+        <span class="apsis-sub">指令优先 · 说出来就做</span>
+      </div>
+      <div class="apsis-tools">
+        <button class="mini" id="apsisCustomize">自定义</button>
+        <button class="mini" id="apsisHelp">手势</button>
+      </div>
+    </div>
+    <div class="intent-wrap">
+      <div class="intent-field">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.4"/></svg>
+        <input id="intentInput" type="text" autocomplete="off" spellcheck="false" placeholder="输入指令：胶片感，然后裁成 16:9，加一句标题">
+        <span class="intent-hint">Enter 执行</span>
+      </div>
+      <div class="intent-chips" id="intentChips"></div>
+    </div>
+  </div>
+
+  <div id="workspace">
+    <aside id="toolrail" class="toolrail"></aside>
+
+    <main id="stagewrap">
+      <div id="stage">
+        <canvas id="rulerX" class="ruler"></canvas>
+        <canvas id="rulerY" class="ruler"></canvas>
+        <div id="rulerCorner" role="button" tabindex="0" title="标尺单位：点击切换">px</div>
+        <div id="docframe">
+          <canvas id="view"></canvas>
+          <canvas id="overlay"></canvas>
+          <div id="textEditor" contenteditable="true" spellcheck="false"></div>
+        </div>
+        <div id="stageHud" class="apsis-only"></div>
+      </div>
+
+      <div id="quickbar" class="apsis-only"></div>
+
+      <div id="statusbar">
+        <div class="sb-left">
+          <button class="sb-btn" id="zoomOut" title="缩小">−</button>
+          <span id="zoomLabel" class="sb-zoom">100%</span>
+          <button class="sb-btn" id="zoomIn" title="放大">+</button>
+          <span class="sb-sep"></span>
+          <button class="sb-btn wide" id="zoomFit">适合屏幕</button>
+          <button class="sb-btn wide" id="zoom100">100%</button>
+          <button class="sb-btn wide" id="compareBtn" title="对比原图（按住 \ 键）">对比</button>
+        </div>
+        <div class="sb-mid" id="statusHint">就绪</div>
+        <div class="sb-right">
+          <span id="docDims">—</span>
+          <span class="sb-sep"></span>
+          <span id="cursorPos">—</span>
+          <span class="sb-sep"></span>
+          <span class="copyright">© Apsis severs 2026 &amp; Ansel Design 2026</span>
+        </div>
+      </div>
+    </main>
+
+    <aside id="panels" class="panels"></aside>
+
+    <!-- Apsis 检查器 -->
+    <aside id="inspector" class="apsis-only"></aside>
+  </div>
+
+  <div id="dock" class="apsis-only"></div>
+  <div id="radial" class="apsis-only"></div>
+
+  <div id="welcome">
+    <button class="welcome-close" id="welClose" title="返回编辑">✕</button>
+    <div class="welcome-inner">
+      <div class="welcome-brand">
+        <svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true">
+          <path d="M12 2 22 7.4v9.2L12 22 2 16.6V7.4z" fill="none" stroke="currentColor" stroke-width=".9"/>
+          <path d="M12 2v20M2 7.4l10 5.2 10-5.2M2 16.6l10-5.2 10 5.2" fill="none" stroke="currentColor" stroke-width=".7" opacity=".45"/>
+        </svg>
+        <h1>Dreikanter <em>photo</em></h1>
+        <p>双模式图像工作台 · Photoshop 模式 / Apsis 模式</p>
+      </div>
+
+      <div class="welcome-resume" id="welResumeWrap" style="display:none">
+        <button class="wel-resume" id="welResume">继续编辑</button>
+        <span class="wel-resume-hint">回到当前画布，或从下面新建 / 打开</span>
+      </div>
+
+      <div class="welcome-actions">
+        <button class="wel-card" id="welNew">
+          <span class="wc-ico">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M12 9v6M9 12h6"/></svg>
+          </span>
+          <b>新建画布</b><small>自定义尺寸 / 分辨率 / 底色</small>
+        </button>
+        <button class="wel-card" id="welOpen">
+          <span class="wc-ico">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 7.5h6l2 2.5h9v9.5h-17z"/><path d="M3.5 7.5V5h12"/></svg>
+          </span>
+          <b>打开照片</b><small>拖入 / 粘贴 / 所有常见格式</small>
+        </button>
+        <button class="wel-card" id="welDemo">
+          <span class="wc-ico">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>
+          </span>
+          <b>示例作品</b><small>带图层结构，直接上手</small>
+        </button>
+      </div>
+
+      <div class="welcome-recents" id="welRecents"></div>
+
+      <div class="welcome-formats">
+        <span>支持</span>
+        <b>JPG</b><b>PNG</b><b>WEBP</b><b>GIF</b><b>BMP</b><b>AVIF</b><b>SVG</b><b>TIFF*</b><b>HEIC*</b>
+        <i>* 取决于系统解码器</i>
+      </div>
+      <div class="welcome-foot">© Apsis severs 2026 &amp; Ansel Design 2026</div>
+    </div>
+  </div>
+
+  <div id="mobileBackdrop"></div>
+  <div id="mobileFab">
+    <button id="mCmd" title="命令面板">⌘</button>
+    <button id="mPanels" title="面板">☰</button>
+  </div>
+  <button class="immersive-exit" id="immersiveExit">退出沉浸模式</button>
+  <div id="dropveil"><div>松手即可置入</div></div>
+  <div id="modalroot"></div>
+  <div id="toastroot"></div>
+  <div id="srStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/perf.js"></script>
+<script src="js/pwa.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/docs.js"></script>
+<script src="js/lut.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/transform.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/dialogs.js"></script>
+<script src="js/layerfx.js"></script>
+<script src="js/guides.js"></script>
+<script src="js/archive.js"></script>
+<script src="js/apsis.js"></script>
+<script src="js/agent.js"></script>
+<script src="js/api.js"></script>
+<script src="js/touch.js"></script>
+<script src="js/tips.js"></script>
+<script src="js/quality.js"></script>
+<script src="tests/smoke.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+/* ==========================================================================
+   Dreikanter photo — apsis.css
+   Apsis 模式：意图优先、无菜单、可自定义的浮层布局
+   ========================================================================== */
+
+body.mode-apsis{
+  --accent:#7b8cff;
+  --accent-2:#9aa7ff;
+  --accent-soft:rgba(123,140,255,.16);
+  --apsis-radius:16px;
+  --dock-h:60px;
+}
+
+.apsis-only{display:none !important}
+body.mode-apsis .ps-only{display:none !important}
+body.mode-apsis .apsis-only{display:flex !important}
+
+body.mode-apsis #menubar,
+body.mode-apsis #optionsbar,
+body.mode-apsis #toolrail,
+body.mode-apsis #panels{display:none !important}
+
+body.mode-apsis #topbar{
+  height:44px;background:transparent;border-bottom:0;padding:0 16px;
+  position:absolute;left:0;right:0;top:0;z-index:80;
+}
+body.mode-apsis .brand b{font-size:13px}
+body.mode-apsis .win-dots{display:none}
+body.mode-apsis .topbar-right{margin-left:auto}
+body.mode-apsis #menubar{display:none}
+body.mode-apsis #app{padding-top:0}
+
+body.mode-apsis #workspace{position:absolute;inset:0;padding:0}
+body.mode-apsis #stagewrap{position:absolute;inset:0}
+body.mode-apsis #stage{
+  background:radial-gradient(1000px 620px at 50% 45%,#1c1c1f 0%,#111113 55%,#0c0c0e 100%);
+  background-image:radial-gradient(1000px 620px at 50% 45%,#1c1c1f 0%,#111113 55%,#0c0c0e 100%);
+}
+body.mode-apsis #docframe{
+  border-radius:var(--apsis-radius);overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.1),0 40px 100px rgba(0,0,0,.7),0 0 120px rgba(123,140,255,.06);
+}
+body.mode-apsis #statusbar{
+  position:fixed;left:0;right:0;bottom:0;height:26px;background:transparent;border:0;
+  padding:0 18px 0 16px;z-index:60;pointer-events:none;opacity:.55;
+}
+body.mode-apsis #statusbar .sb-left,
+body.mode-apsis #statusbar .sb-mid{display:none}
+body.mode-apsis #statusbar .sb-right{margin-left:auto;pointer-events:auto}
+body.mode-apsis .sb-sep{background:rgba(255,255,255,.14)}
+body.mode-apsis .copyright{color:rgba(255,255,255,.28)}
+
+/* ---------------- Apsis 顶部意图栏 ---------------- */
+#apsisTop{
+  position:absolute;left:0;right:0;top:0;z-index:70;
+  flex-direction:column;padding:52px 0 0;pointer-events:none;
+}
+.apsis-head{
+  display:flex;align-items:center;justify-content:space-between;padding:0 22px 10px;pointer-events:auto;
+}
+.apsis-title{display:flex;align-items:center;gap:8px;font-size:11px;color:#8d8d96;letter-spacing:.3px}
+.apsis-title .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.apsis-title #apsisDocName{color:#d2d2da;font-weight:500}
+.apsis-sub{color:#6f6f7c;font-size:10px;padding-left:4px;border-left:1px solid rgba(255,255,255,.1);margin-left:2px;padding-left:9px}
+.apsis-tools{display:flex;gap:6px}
+.mini{
+  height:24px;padding:0 10px;border-radius:12px;font-size:10.5px;color:#9a9aa5;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);
+}
+.mini:hover{background:rgba(255,255,255,.09);color:#fff}
+
+.intent-wrap{width:min(760px,92vw);margin:0 auto;display:flex;flex-direction:column;gap:8px;pointer-events:auto;position:relative}
+.intent-field{
+  display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:14px;
+  background:rgba(24,24,28,.96);border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 46px rgba(0,0,0,.5);
+  transition:border-color .2s,box-shadow .2s;
+}
+.intent-field:focus-within{border-color:rgba(123,140,255,.55);box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 3px rgba(123,140,255,.09)}
+.intent-field svg{color:var(--accent);flex:0 0 auto;opacity:.85}
+.intent-field input{flex:1;background:none;border:0;height:100%;font-size:13px;color:#f0f0f4;letter-spacing:.1px;min-width:0}
+.intent-field input:focus{outline:none}
+.intent-field input::placeholder{color:#5c5c66}
+.intent-hint{font-size:9.5px;color:#5c5c66;border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:2px 6px;white-space:nowrap}
+.intent-chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.intent-chips .chip{
+  background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.09);color:#8e8e9a;
+  font-size:10px;padding:4px 9px;border-radius:13px;
+}
+.intent-chips .chip:hover{background:rgba(123,140,255,.16);border-color:rgba(123,140,255,.4);color:#cfd4ff}
+
+/* ---------------- 快速风格条 ---------------- */
+#quickbar{
+  position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--dock-h) + 22px);
+  z-index:55;flex-direction:row;align-items:center;gap:6px;padding:6px 8px;border-radius:13px;
+  background:rgba(22,22,26,.94);border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 14px 40px rgba(0,0,0,.45);max-width:min(760px,90vw);overflow-x:auto;scrollbar-width:none;
+}
+#quickbar::-webkit-scrollbar{display:none}
+.quick-label{font-size:9.5px;color:#5f5f6b;letter-spacing:.8px;text-transform:uppercase;padding:0 4px 0 6px;white-space:nowrap}
+.quick-chip{
+  display:flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:8px;font-size:10.5px;
+  color:#a2a2ae;white-space:nowrap;border:1px solid transparent;transition:all .14s;
+}
+.quick-chip:hover{background:rgba(255,255,255,.07);color:#fff}
+.quick-chip.on{background:rgba(123,140,255,.18);color:#ccd2ff;border-color:rgba(123,140,255,.36)}
+.quick-chip .qc-dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}
+
+/* ---------------- 底部工具坞 ---------------- */
+#dock{
+  position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:75;
+  align-items:center;gap:3px;padding:7px;border-radius:18px;
+  background:rgba(22,22,26,.96);border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 50px rgba(0,0,0,.55);
+}
+.dock-btn{
+  width:var(--dkbtn,42px);height:var(--dkbtn,42px);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;color:#a4a4b0;position:relative;transition:all .16s var(--ease);
+}
+.dock-btn:hover{background:rgba(255,255,255,.07);color:#fff;transform:translateY(-2px)}
+.dock-btn.active{background:linear-gradient(180deg,rgba(123,140,255,.3),rgba(123,140,255,.16));color:#fff}
+.dock-btn.active::after{content:"";position:absolute;bottom:3px;width:3px;height:3px;border-radius:50%;background:var(--accent)}
+.dock-btn span{font-size:8.5px;letter-spacing:.2px;opacity:.8;line-height:1}
+.dock-sep{width:1px;height:26px;background:rgba(255,255,255,.09);margin:0 4px}
+.dock-more{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#8b8b98}
+.dock-more:hover{background:rgba(255,255,255,.07);color:#fff}
+
+/* ---------------- Apsis 检查器 ---------------- */
+#inspector{
+  position:absolute;right:14px;top:132px;bottom:calc(var(--dock-h) + 26px);width:296px;z-index:65;
+  flex-direction:column;gap:9px;overflow-y:auto;padding-right:2px;
+  scrollbar-width:thin;
+}
+#inspector::-webkit-scrollbar{width:5px}
+#inspector::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+.insp-card{
+  background:rgba(23,23,27,.93);border:1px solid rgba(255,255,255,.09);border-radius:var(--apsis-radius);box-shadow:0 16px 40px rgba(0,0,0,.35);overflow:hidden;flex:0 0 auto;
+}
+.insp-head{
+  display:flex;align-items:center;gap:8px;padding:11px 13px 8px;font-size:10px;letter-spacing:1.1px;
+  text-transform:uppercase;color:#888895;font-weight:600;cursor:pointer;user-select:none;
+}
+.insp-head:hover{color:#b9b9c6}
+.insp-head .ih-act{margin-left:auto;font-size:9.5px;color:#5f5f6b;letter-spacing:0;text-transform:none}
+.insp-head .ih-caret{display:flex;color:#55555f;transition:transform .2s var(--ease)}
+.insp-card.collapsed .ih-caret{transform:rotate(-90deg)}
+.insp-card.collapsed .insp-body{display:none}
+.insp-body{padding:0 12px 12px;display:flex;flex-direction:column;gap:9px}
+.insp-card{transition:border-color .18s}
+.insp-card.collapsed{border-color:rgba(255,255,255,.06)}
+
+/* 图层卡组 */
+.deck{display:flex;flex-direction:column;gap:6px;max-height:186px;overflow-y:auto;padding-right:1px}
+.deck::-webkit-scrollbar{width:4px}
+.deck::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+.deck-card{
+  display:flex;align-items:center;gap:9px;padding:7px;border-radius:11px;
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);cursor:pointer;
+  transition:all .16s var(--ease);
+}
+.deck-card:hover{background:rgba(255,255,255,.06)}
+.deck-card.active{background:rgba(123,140,255,.13);border-color:rgba(123,140,255,.4);box-shadow:0 6px 18px rgba(123,140,255,.1)}
+.deck-thumb{
+  width:36px;height:36px;border-radius:8px;flex:0 0 auto;border:1px solid rgba(255,255,255,.12);overflow:hidden;
+  background-color:#fff;
+  background-image:linear-gradient(45deg,#c4c4c4 25%,transparent 25%),linear-gradient(-45deg,#c4c4c4 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#c4c4c4 75%),linear-gradient(-45deg,transparent 75%,#c4c4c4 75%);
+  background-size:8px 8px;background-position:0 0,0 4px,4px -4px,-4px 0;
+}
+.deck-thumb canvas{width:100%;height:100%;display:block}
+.deck-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.deck-name{font-size:11px;color:#d5d5dd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.deck-sub{font-size:9px;color:#7c7c88;font-family:var(--mono)}
+.deck-eye{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#9a9aa6;flex:0 0 auto}
+.deck-eye.off{color:#4a4a54}
+.deck-eye:hover{background:rgba(255,255,255,.1);color:#fff}
+
+/* 检查器内的控件 */
+.apsis-slider{display:flex;flex-direction:column;gap:2px}
+.apsis-slider .as-top{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#83838f}
+.apsis-slider .as-top b{font-family:var(--mono);font-size:9.5px;color:#c9c9d4;font-weight:400;background:rgba(255,255,255,.05);padding:1px 5px;border-radius:4px}
+.apsis-slider input[type=range]{
+  -webkit-appearance:none;appearance:none;height:16px;background:none;width:100%;cursor:ew-resize;
+}
+.apsis-slider input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent) var(--p,50%),rgba(255,255,255,.11) var(--p,50%))}
+.apsis-slider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;margin-top:-4.5px;
+  box-shadow:0 2px 8px rgba(0,0,0,.6);
+}
+.insp-row{display:flex;gap:6px}
+.insp-btn{
+  flex:1;height:29px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  font-size:10.5px;color:#b6b6c2;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.insp-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.insp-btn.accent{background:rgba(123,140,255,.18);border-color:rgba(123,140,255,.35);color:#cfd4ff}
+.insp-select{
+  height:28px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  color:#ddd;font-size:10.5px;padding:0 8px;width:100%;appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4'><path d='M5 9l7 7 7-7'/></svg>");
+  background-repeat:no-repeat;background-position:right 8px center;
+}
+
+/* ---------------- 径向菜单 ---------------- */
+#radial{
+  display:none !important;
+  position:fixed;inset:0;z-index:600;align-items:center;justify-content:center;
+  background:rgba(8,8,10,.45);
+}
+#radial.on{display:flex !important}
+#radial .radial-ring{position:relative;width:0;height:0}
+.radial-item{
+  position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
+  background:rgba(26,26,32,.94);border:1px solid rgba(255,255,255,.12);color:#c0c0cc;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  box-shadow:0 10px 26px rgba(0,0,0,.5);transition:all .16s var(--ease);
+}
+.radial-item span{font-size:8.5px;opacity:.72}
+.radial-item:hover,.radial-item.sel{background:var(--accent);color:#fff;transform:scale(1.09);border-color:transparent}
+.radial-center{
+  position:absolute;width:74px;height:74px;margin:-37px 0 0 -37px;border-radius:50%;
+  background:rgba(20,20,26,.9);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:#6d6d7a;letter-spacing:1px;text-transform:uppercase;
+}
+
+/* ---------------- HUD ---------------- */
+#stageHud{
+  position:absolute;left:14px;top:132px;z-index:50;flex-direction:column;gap:6px;pointer-events:none;
+}
+.hud-chip{
+  display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:12px;
+  background:rgba(23,23,27,.92);border:1px solid rgba(255,255,255,.09);
+  font-size:10px;color:#8c8c99;pointer-events:none;max-width:240px;
+}
+.hud-chip b{color:#d7d7e0;font-weight:500}
+.hud-chip .hud-key{font-size:9px;color:#5c5c68;font-family:var(--mono);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:1px 4px}
+
+/* ---------------- 自定义抽屉 ---------------- */
+.sheet{
+  position:fixed;right:16px;top:80px;bottom:90px;width:308px;z-index:650;
+  background:rgba(22,22,27,.98);border:1px solid rgba(255,255,255,.1);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.7);
+  display:flex;flex-direction:column;animation:slideIn .22s var(--ease);overflow:hidden;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.sheet-head{display:flex;align-items:center;padding:14px 16px 10px;font-size:12px;color:#e6e6ee;font-weight:600}
+.sheet-head .sh-close{margin-left:auto;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#8a8a96}
+.sheet-head .sh-close:hover{background:rgba(255,255,255,.08);color:#fff}
+.sheet-body{padding:2px 16px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.set-block{display:flex;flex-direction:column;gap:8px}
+.set-title{font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;color:#5f5f6b;font-weight:600}
+.set-line{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#b0b0bc;gap:10px}
+.swatches-mini{display:flex;gap:7px;flex-wrap:wrap}
+.swatch-mini{width:24px;height:24px;border-radius:8px;border:2px solid transparent;cursor:pointer;position:relative}
+.swatch-mini.active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.15)}
+.set-range{width:120px;accent-color:var(--accent)}
+.toggle{width:34px;height:19px;border-radius:11px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;transition:background .18s;flex:0 0 auto}
+.toggle::after{content:"";position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .18s var(--ease)}
+.toggle.on{background:var(--accent)}
+.toggle.on::after{transform:translateX(15px)}
+
+/* ---------------- 检查器内的扩展块 ---------------- */
+.aps-meta{display:flex;flex-direction:column;gap:3px}
+.aps-docname{font-size:12.5px;color:#e7e7ef;font-weight:500;letter-spacing:.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aps-docsub{font-size:9.5px;color:#66667a;font-family:var(--mono)}
+.aps-docrow{font-size:9.5px;color:#55556a;margin-top:2px}
+.aps-empty{font-size:10px;color:#55556a;line-height:1.7;padding:4px 2px}
+.aps-chat{display:flex;flex-direction:column;gap:6px;max-height:190px;overflow-y:auto}
+.aps-chat .msg{font-size:10.5px}
+.aps-chat .msg.ai .bubble{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);color:#c2c2d0}
+.aps-chat .msg.me .bubble{background:rgba(123,140,255,.22);border-color:rgba(123,140,255,.3);color:#dcdfff}
+.aps-chat .msg .bubble{padding:6px 9px;border-radius:10px}
+.aps-chat-input{
+  height:29px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  padding:0 10px;font-size:10.5px;color:#e0e0e8;width:100%;
+}
+.aps-chat-input:focus{outline:none;border-color:rgba(123,140,255,.45)}
+.aps-chat::-webkit-scrollbar{width:4px}
+.aps-chat::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+
+/* ---------------- 响应式 ---------------- */
+@media (max-width:1240px){
+  body.mode-ps{--panel:258px}
+  #inspector{width:272px}
+}
+@media (max-width:1060px){
+  body.mode-ps{--panel:232px}
+  #inspector{width:252px;top:126px}
+  .apsis-sub{display:none}
+}
+@media (max-width:760px){
+  .welcome-actions{grid-template-columns:1fr}
+  body.mode-ps #panels{display:none}
+  #inspector{display:none !important}
+  #quickbar{bottom:calc(var(--dock-h) + 16px)}
+}
+@media (max-width:620px){
+  #apsisTop{padding-top:46px}
+  .intent-field{height:42px}
+  .intent-hint{display:none}
+  #dock{gap:0;padding:5px}
+}

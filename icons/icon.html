@@ -1,0 +1,16 @@
+<!DOCTYPE html><meta charset="utf-8"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#141414}</style>
+<body><canvas id="c"></canvas><script>
+const q=new URLSearchParams(location.search); const S=+(q.get('size')||512);
+const c=document.getElementById('c'); c.width=S; c.height=S; const x=c.getContext('2d');
+const g=x.createLinearGradient(0,0,S,S); g.addColorStop(0,'#141a2e'); g.addColorStop(1,'#2a1440');
+x.fillStyle=g; x.fillRect(0,0,S,S);
+const cx=S/2, cy=S/2, R=S*0.34;
+x.strokeStyle='#6aa9ff'; x.lineWidth=Math.max(2,S*0.012);
+x.beginPath();
+for(let i=0;i<6;i++){const a=-Math.PI/2+i*Math.PI/3;const px=cx+Math.cos(a)*R, py=cy+Math.sin(a)*R; i?x.lineTo(px,py):x.moveTo(px,py);}
+x.closePath(); x.stroke();
+x.globalAlpha=.55; x.beginPath();
+x.moveTo(cx,cy-R); x.lineTo(cx,cy+R); x.moveTo(cx-R*.87,cy-R*.5); x.lineTo(cx+R*.87,cy+R*.5); x.moveTo(cx+R*.87,cy-R*.5); x.lineTo(cx-R*.87,cy+R*.5);
+x.stroke(); x.globalAlpha=1;
+x.fillStyle='#6aa9ff'; x.beginPath(); x.arc(cx,cy,S*0.045,0,Math.PI*2); x.fill();
+</script></body>

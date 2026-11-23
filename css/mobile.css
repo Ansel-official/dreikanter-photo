@@ -1,0 +1,117 @@
+/* ==========================================================================
+   Dreikanter photo — mobile.css
+   触控尺寸 / 手机与平板布局
+   ========================================================================== */
+
+#mobileFab, #mobileBackdrop{display:none}
+
+@media (pointer: coarse){
+  :root{--rail:64px}
+  .tool-btn{width:32px;height:32px}
+  .tool-grid{grid-template-columns:repeat(var(--rail-col,2),32px);gap:3px}
+  .slider-row input[type=range]{height:26px}
+  .slider-row input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-7px}
+  .opt-btn,.sb-btn{min-height:28px}
+  .icon-btn{width:28px;height:26px}
+  .panel-head{height:32px}
+  .layer-item{padding:7px 4px}
+  .cmd-item{padding:7px 9px}
+  .arch-btn,.arc-btn{width:26px;height:26px}
+  .color-swatch,.swatch{min-width:14px}
+  .seg button{height:26px}
+}
+
+@media (max-width: 820px){
+  html,body{overscroll-behavior:none;-webkit-text-size-adjust:100%}
+  #app{height:100dvh}
+  #topbar{height:46px;padding:0 8px 0 10px;gap:2px}
+  #menubar{display:none}
+  .brand{padding-right:6px}
+  .brand b{font-size:12px}
+  .brand i{display:none}
+  .win-dots{display:none}
+  #paletteBtn{width:32px;height:32px;justify-content:center;padding:0;border-radius:8px}
+  #paletteBtn span,#paletteBtn kbd{display:none}
+  .mode-switch button{padding:4px 7px;font-size:9.5px}
+  .mode-switch{border-radius:7px}
+
+  #optionsbar{height:46px;padding:0 8px;gap:8px}
+  .opt-tool{display:none}
+  .opt-label{font-size:10px}
+  .opt-field input{width:44px}
+
+  #toolrail{
+    position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;height:56px;
+    flex-direction:row;align-items:center;overflow-x:auto;overflow-y:hidden;
+    border-right:0;border-top:1px solid #0d0d0d;padding:0 8px;gap:6px;
+    z-index:120;-webkit-overflow-scrolling:touch;
+  }
+  #toolrail .tool-grid{display:flex;gap:4px;justify-content:flex-start}
+  #toolrail .rail-sep{display:none}
+  #toolrail .tool-btn{width:42px;height:42px;flex:0 0 auto;border-radius:8px}
+  #toolrail .rail-swatches{flex:0 0 auto;margin:0 2px;transform:scale(.86)}
+  #toolrail::-webkit-scrollbar{display:none}
+  #toolrail::-webkit-scrollbar{display:none}
+
+  #stagewrap{position:absolute;inset:0 0 56px 0}
+  #stage{touch-action:none}
+  #statusbar{height:24px;font-size:9px;padding:0 8px;gap:6px}
+  .sb-mid{display:none}
+  .copyright{display:none}
+  .sb-btn.wide{padding:0 5px}
+
+  #panels{
+    position:fixed;top:0;right:0;bottom:56px;width:min(88vw,344px);z-index:130;
+    transform:translateX(102%);transition:transform .26s var(--ease);
+    box-shadow:-12px 0 40px rgba(0,0,0,.5);
+  }
+  #panels.open{transform:none}
+  #mobileBackdrop{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:125;
+  }
+  #mobileBackdrop.on{display:block}
+  #mobileFab{
+    position:fixed;right:12px;bottom:94px;z-index:135;display:flex;flex-direction:column;gap:9px;
+  }
+  #mobileFab button{
+    width:46px;height:46px;border-radius:50%;background:var(--panel-bg,#242424);
+    border:1px solid #3d3d3d;color:#dcdcdc;font-size:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.45);
+  }
+  #mobileFab button:active{background:#3a3a3a;transform:scale(.95)}
+  body.drawer-open #mobileFab{display:none}
+  body.drawer-open #mobileFab{display:none}
+
+  #docframe{border-radius:0 !important}
+  .modal{width:calc(100vw - 22px) !important;max-height:calc(100dvh - 40px)}
+  .set-pane{max-height:60vh}
+  .check-grid,.key-grid{grid-template-columns:1fr}
+  #toastroot{bottom:68px}
+
+  /* Apsis 模式 */
+  body.mode-apsis #toolrail{display:none}
+  body.mode-apsis #stagewrap{inset:0}
+  body.mode-apsis #statusbar{display:none}
+  #apsisTop{padding-top:56px}
+  .apsis-head{padding:0 14px 8px}
+  .apsis-sub{display:none}
+  .intent-field{height:44px;border-radius:12px}
+  .intent-hint{display:none}
+  body.mode-apsis #inspector{
+    display:flex !important;position:fixed;top:0;right:0;bottom:56px;width:min(90vw,352px);
+    z-index:130;transform:translateX(102%);transition:transform .26s var(--ease);
+    padding:14px 12px 20px;overflow-y:auto;background:var(--panel-bg,#151517);
+    box-shadow:-12px 0 40px rgba(0,0,0,.55);
+  }
+  body.mode-apsis #inspector.open{transform:none}
+  #quickbar{bottom:calc(var(--dock-h) + 14px);max-width:94vw}
+  #dock{bottom:10px;padding:6px;border-radius:16px}
+  .dock-btn{width:44px;height:44px}
+  #stageHud{display:none}
+}
+
+@media (max-width: 430px){
+  .mode-switch button{padding:3px 6px;font-size:9px}
+  #mobileFab{right:10px;bottom:92px}
+  #quickbar{display:none !important}
+}

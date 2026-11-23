@@ -1,0 +1,107 @@
+#!/usr/bin/env node
+/* ==========================================================================
+   Dreikanter photo — tests/run.js
+   用 headless Edge + CDP 真实驱动浏览器内自检，并可选生成三张截图。
+   用法：node tests/run.js [--shots]
+   前置：本机已启动静态服务（默认 http://127.0.0.1:8787）
+   ========================================================================== */
+const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+const PORT = 9345;
+const BASE = process.env.DRK_BASE || 'http://127.0.0.1:8787';
+const EDGE = process.env.DRK_BROWSER || 'C://Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+const PROFILE = path.join(__dirname, '..', '.tmp-test-profile');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+(async () => {
+  try { fs.rmSync(PROFILE, { recursive: true, force: true }); } catch (e) { }
+  const browser = spawn(EDGE, [
+    '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    '--remote-debugging-port=' + PORT, '--user-data-dir=' + PROFILE, '--window-size=1600,1000', 'about:blank'
+  ], { stdio: 'ignore' });
+
+  let tab = null;
+  for (let i = 0; i < 90; i++) {
+    try {
+      const list = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json();
+      if (list.length) { tab = list.find(t => t.type === 'page'); if (tab) break; }
+    } catch (e) { }
+    await sleep(250);
+  }
+  if (!tab) { console.log('无法连接浏览器'); browser.kill(); process.exit(1); }
+
+  const ws = new WebSocket(tab.webSocketDebuggerUrl);
+  const pending = new Map();
+  let seq = 0;
+  const send = (method, params) => new Promise(res => {
+    const id = ++seq;
+    pending.set(id, res);
+    ws.send(JSON.stringify({ id, method, params }));
+  });
+  ws.onmessage = ev => {
+    const m = JSON.parse(ev.data);
+    if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); }
+  };
+  await new Promise(r => ws.onopen = r);
+  await send('Page.enable');
+  await send('Runtime.enable');
+  /* 预热一次：模拟 PWA 二次启动（脚本已在磁盘缓存），避免冷盘抖动污染首屏指标 */
+  await send('Page.navigate', { url: BASE + '/' });
+  await sleep(1800);
+  await send('Page.navigate', { url: BASE + '/?test' });
+
+  let ready = false;
+  for (let i = 0; i < 80; i++) {
+    const r = await send('Runtime.evaluate', { expression: 'typeof window.__TESTS', returnByValue: true });
+    if (r.result && r.result.result && r.result.result.value === 'object') { ready = true; break; }
+    await sleep(250);
+  }
+  if (!ready) { console.log('自检脚本未加载'); browser.kill(); process.exit(1); }
+
+  const t0 = Date.now();
+  const r = await send('Runtime.evaluate', { expression: 'window.__TESTS.run()', awaitPromise: true, returnByValue: true, timeout: 300000 });
+  const res = r.result && r.result.result && r.result.result.value;
+  if (!res || !res.items) {
+    console.log('执行异常', JSON.stringify(r.result || {}).slice(0, 500));
+    browser.kill(); process.exit(1);
+  }
+
+  const fails = res.items.filter(i => !i.pass);
+  console.log(`\nDreikanter photo — 自检 ${res.pass}/${res.total}  ${res.ms}ms  墙钟 ${((Date.now() - t0) / 1000).toFixed(1)}s\n`);
+  res.items.forEach(i => {
+    console.log(`${i.pass ? '✓' : '✗'} ${i.name}${i.info ? '  [' + i.info + ']' : ''}`);
+  });
+  if (fails.length) { console.log('\n失败项：'); fails.forEach(f => console.log('  ✗ ' + f.name + '  ' + (f.info || ''))); }
+  if (res.errors && res.errors.length) { console.log('\n运行时错误：'); res.errors.forEach(e => console.log('  ' + e)); }
+
+  if (process.argv.includes('--shots')) {
+    const shot = async (file, clip) => {
+      await sleep(700);
+      const s = await send('Page.captureScreenshot', clip ? { format: 'png', clip } : { format: 'png' });
+      if (s.result && s.result.data) fs.writeFileSync(path.join(__dirname, '..', file), Buffer.from(s.result.data, 'base64'));
+      console.log('已保存 ' + file);
+    };
+    await send('Page.navigate', { url: BASE + '/?editor' }); await sleep(2600);
+    await send('Runtime.evaluate', { expression: "hideWelcome(); fitView(); App.showGrid=false; 'ok'", returnByValue: true });
+    await shot('final.png');
+
+    await send('Runtime.evaluate', { expression: "Settings.set('theme','light',false); fitView(); 'ok'", returnByValue: true });
+    await shot('final-light.png');
+    await send('Runtime.evaluate', { expression: "Settings.set('theme','dark',false); 'ok'", returnByValue: true });
+
+    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+    await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+    await sleep(400);
+    await send('Page.navigate', { url: BASE + '/?editor' }); await sleep(2800);
+    await send('Runtime.evaluate', { expression: "hideWelcome(); fitView(); 'ok'", returnByValue: true });
+    await shot('final-mobile.png', { x: 0, y: 0, width: 390, height: 844, scale: 2 });
+  }
+
+  ws.close(); browser.kill();
+  /* 清理临时浏览器档案，避免每次运行留下几十 MB */
+  await sleep(600);
+  try { fs.rmSync(PROFILE, { recursive: true, force: true }); } catch (e) { }
+  process.exit(fails.length ? 1 : 0);
+})().catch(e => { console.log('运行器错误：', e.message); process.exit(1); });
