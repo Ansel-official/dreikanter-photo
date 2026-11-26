@@ -25,3 +25,6 @@ harmony/local.properties
 harmony/.clangd
 harmony/.clang-format
 harmony/.clang-tidy
+
+# WebView2 桌面端构建产物
+desktop/webview2/build/
