@@ -92,7 +92,7 @@
 
 /* 右：最近存档 */
 .wel-recent{flex:1 1 auto;padding:14px 0 0;overflow-y:auto}
-.wel-recent-list{padding:0 16px 12px;display:flex;flex-direction:column;gap:1px}
+.wel-recent-list{padding:0 16px 12px;display:block}
 .wel-recent{
   appearance:none;border:0;background:transparent;text-align:left;cursor:pointer;
   display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:3px;
@@ -111,7 +111,8 @@
 
 /* 空状态：整块区域当拖放提示 */
 .wel-empty{
-  border:1px dashed #2b2b2e;border-radius:3px;min-height:236px;width:100%;box-sizing:border-box;
+  border:1px dashed #2b2b2e;border-radius:3px;min-height:236px;box-sizing:border-box;
+  max-width:100%;overflow:hidden;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
   color:#6b6b72;font-size:11px;line-height:1.7;text-align:center;padding:20px;
 }
@@ -121,8 +122,8 @@
   padding:0 4px;color:#8a8a90;
 }
 .wel-keys{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:7px 12px;
-  width:100%;max-width:520px;margin-top:14px;text-align:left;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 14px;
+  width:auto;max-width:420px;margin-top:14px;text-align:left;
   font-size:9.5px;color:#5f5f66;letter-spacing:.02em;
 }
 .wel-keys span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
@@ -184,3 +185,8 @@
 }
 .panel-head .ph-title{letter-spacing:.04em}
 .toast{border-radius:4px}
+
+/* v18.1 收尾修正：空状态块撑满右栏，快捷键改单列避免挤压 */
+.wel-recent-list{display:block}
+.wel-empty{width:100%;box-sizing:border-box}
+.wel-keys{grid-template-columns:1fr;max-width:100%;gap:6px}

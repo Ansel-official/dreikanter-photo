@@ -77,6 +77,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   if (res.errors && res.errors.length) { console.log('\n运行时错误：'); res.errors.forEach(e => console.log('  ' + e)); }
 
   if (process.argv.includes('--shots')) {
+    /* v18.1：先给起始页留一张（自检跑完后界面停在编辑器，这里再切回去） */
+    await send('Runtime.evaluate', {
+      expression: "(() => { const o=document.getElementById('testOut'); if(o) o.remove(); if (typeof showWelcome === 'function') showWelcome(); const tr=document.getElementById('toastroot'); if(tr) tr.innerHTML=''; return 'ok'; })()",
+      returnByValue: true
+    });
+    await sleep(600);
+    {
+      const s0 = await send('Page.captureScreenshot', { format: 'png' });
+      if (s0.result && s0.result.data) {
+        fs.writeFileSync(path.join(__dirname, '..', 'final-welcome.png'), Buffer.from(s0.result.data, 'base64'));
+        console.log('已保存 final-welcome.png');
+      }
+    }
+    await send('Runtime.evaluate', { expression: "(() => { hideWelcome(); return 'ok'; })()", returnByValue: true });
+
     const shot = async (file, clip) => {
       await sleep(700);
       const s = await send('Page.captureScreenshot', clip ? { format: 'png', clip } : { format: 'png' });

@@ -1670,7 +1670,9 @@ const UI = {
     const hasDoc = !!App.doc.w;
     const hasArc = typeof Archives !== 'undefined' && Archives.list.length > 0;
     const session = Store.get('session', null);
-    if (!hasDoc && !hasArc && !session) { wrap.style.display = 'none'; return; }
+    if (!hasDoc && !hasArc && !session) {
+      wrap.style.display = 'none';
+    } else {
     wrap.style.display = 'flex';
     if (hasDoc) {
       btn.textContent = '继续编辑「' + (App.doc.name || '未命名') + '」';
@@ -1691,6 +1693,7 @@ const UI = {
         toast('已恢复上次画布的尺寸与视图');
       };
       if (hint) hint.textContent = '仅恢复画布尺寸/缩放/位置，像素内容需从存档或原图恢复';
+    }
     }
     const recents = $('#welRecents');
     if (recents) {
