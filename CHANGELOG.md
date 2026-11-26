@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## v18.2 — HarmonyOS NEXT 支持 + App 备案指南（2026-11-26）
+
+> 自检仍 288/288。新增鸿蒙原生壳工程，网页侧补协议判据。
+
+- **新增 `harmony/`**：ArkTS 原生壳（stage 模型），`Web` 组件加载 `$rawfile('index.html')`，
+  全屏沉浸（`expandSafeArea` + `setWindowLayoutFullScreen`）、返回键接管、控制台转发 hilog；
+  `onShowFileSelector` 接 `PhotoViewPicker`，把相册图片复制进沙箱再交给 `<input type=file>`。
+- **`harmony/sync-assets.ps1`**：一键把 `index.html/css/js/icons` 同步进 `resources/rawfile`（48 文件 / 790 KB）。
+- **网页侧**：`js/pwa.js` 改成协议白名单，只有 `http(s)` 才注册 Service Worker——
+  `resource://rawfile`（鸿蒙壳）与 `file://` 一律跳过，不再往控制台刷错误；
+  关于框的运行模式会显示「鸿蒙应用（resource://rawfile）」。
+- **`docs/App备案.md`**：App 备案 vs 网站 ICP 备案的区别、触发条件、材料清单、华为云流程、
+  可直接抄的填写模板、上架应用市场的额外要求与常见坑。
+- `.gitignore` 排除 `harmony/entry/src/main/resources/rawfile/` 等生成物。
+
 ## v18.1 — 界面去 AI 味 + 打包导出 + 备案位（2026-11-26）
 
 > 自检 276 → **288**（新增 12 项；连跑 3 次全绿）。

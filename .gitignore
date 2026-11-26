@@ -16,3 +16,12 @@ android/debug.keystore
 .DS_Store
 Thumbs.db
 android/build.bom.ps1
+# HarmonyOS：rawfile 由 sync-assets.ps1 生成
+harmony/entry/src/main/resources/rawfile/
+harmony/entry/build/
+harmony/.hvigor/
+harmony/oh_modules/
+harmony/local.properties
+harmony/.clangd
+harmony/.clang-format
+harmony/.clang-tidy

@@ -977,7 +977,9 @@ const Dialogs = {
         ),
         h('div', { class: 'prop-grid', style: { marginTop: '4px' } },
           h('span', { class: 'k' }, '运行模式'),
-          h('span', { class: 'v' }, location.protocol === 'file:' ? '本地文件（file://）' : 'Web（PWA 可安装）'),
+          h('span', { class: 'v' }, /^https?:$/.test(location.protocol) ? 'Web（PWA 可安装）'
+            : location.protocol === 'resource:' ? '鸿蒙应用（resource://rawfile）'
+            : '本地文件（file://）'),
           h('span', { class: 'k' }, 'Worker'),
           h('span', { class: 'v' }, (typeof WorkerFX !== 'undefined' && WorkerFX.ready) ? '已启用（滤镜后台运算）' : '未启用（回退主线程）'),
           h('span', { class: 'k' }, '首屏可交互'),

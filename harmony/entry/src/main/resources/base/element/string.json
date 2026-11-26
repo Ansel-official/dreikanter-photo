@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Dreikanter photo 图像编辑器"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "双模式图像工作台"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "Dreikanter photo"
+    },
+    {
+      "name": "perm_read_media",
+      "value": "用于打开相册中的照片进行编辑"
+    }
+  ]
+}

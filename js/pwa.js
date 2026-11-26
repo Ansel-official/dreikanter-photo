@@ -9,7 +9,8 @@ const PWA = {
   registration: null,
 
   init() {
-    if (location.protocol === 'file:') return; /* 本地文件模式不做 PWA */
+    /* 只有 http(s) 才做 PWA：file:// 与 HarmonyOS 的 resource://rawfile 都不注册 SW */
+    if (!/^https?:$/.test(location.protocol)) return;
     this.register();
     this.bindInstall();
     window.addEventListener('online', () => toast('网络已恢复', 'ok'));

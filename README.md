@@ -2,7 +2,7 @@
 
 > 双模式图像工作台 · Photoshop 模式 / Apsis 模式
 > 纯前端、无构建、离线可用（双击 `index.html` 即可；http 下可安装为桌面应用）
-> 版本 **v18.1**（2026-11-26）· 自检 **288 项全绿**
+> 版本 **v18.2**（2026-11-26）· 自检 **288 项全绿**
 > © Apsis severs 2026 & Ansel Design 2026 · [MIT License](LICENSE)
 
 ---
@@ -14,7 +14,19 @@
 - **打包 ZIP**：导出队列面板新增「打包 ZIP」，把本次会话导出的图一次性打成包（零依赖实现）。
 - **ICP 备案位**：新增 `js/site.js` 与 `docs/ICP备案.md`，起始页与「关于」都会显示备案号；未填写时明确提示「待填写」。
 - **按钮审计**：394 个按钮全部有可访问名称，108 个菜单项全部可执行，主入口点击不抛异常。
-- 自检 **288/288**（新增 12 项）。
+- **HarmonyOS NEXT 支持**：新增 `harmony/` 原生壳工程（ArkTS + Web 组件），鸿蒙 5.x 装不了 APK 的机型改用 HAP，见 [harmony/README.md](harmony/README.md)。
+- **App 备案指南**：`docs/App备案.md`（App 备案 ≠ 网站 ICP 备案；自用不需要，上架才要）。
+
+## 鸿蒙（HarmonyOS NEXT）
+
+HarmonyOS 5.x（纯血鸿蒙）**不支持 APK**，需要用 HAP：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\harmony\sync-assets.ps1   # 同步网页资源
+# 然后用 DevEco Studio 5.0+ 打开 harmony/，登录华为账号自动签名，Run 到设备
+```
+
+细节与踩坑见 [harmony/README.md](harmony/README.md)；调试签名 + `hdc install` **不需要 App 备案**。
 
 ## 安装包（Release）
 

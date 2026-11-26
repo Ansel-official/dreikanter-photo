@@ -1,0 +1,10 @@
+{
+  "modelVersion": "5.0.0",
+  "name": "dreikanter-photo",
+  "version": "18.2.0",
+  "description": "Dreikanter photo HarmonyOS shell",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.19"
+  }
+}
