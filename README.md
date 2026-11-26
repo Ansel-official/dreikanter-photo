@@ -17,6 +17,19 @@
 - **HarmonyOS NEXT 支持**：新增 `harmony/` 原生壳工程（ArkTS + Web 组件），鸿蒙 5.x 装不了 APK 的机型改用 HAP，见 [harmony/README.md](harmony/README.md)。
 - **App 备案指南**：`docs/App备案.md`（App 备案 ≠ 网站 ICP 备案；自用不需要，上架才要）。
 
+## 平台支持矩阵
+
+| 平台 / 系统 | 用什么 | 状态 |
+|---|---|---|
+| Windows 10/11 | `Dreikanter-photo-*-win-x64.exe`（Electron 便携版） | ✅ 已出包 |
+| **HarmonyOS 4.x / 5.x（安卓兼容）** | `Dreikanter-photo-*-android.apk`（侧载，需关纯净模式） | ✅ 已出包 |
+| **HarmonyOS NEXT（5.0 纯血鸿蒙）** | `harmony/` 工程打 HAP（DevEco Studio 构建） | ✅ 工程就绪，需本机构建 |
+| 任意手机浏览器（含鸿蒙 4 / NEXT） | 在线版网页 + 添加到桌面（PWA 离线可用） | ✅ 静态站点 |
+| macOS / Linux | 源码直接跑（`node tests/serve.js`）或双击 index.html | ✅ |
+
+> HarmonyOS 4.x 基于 AOSP，APK 可装；NEXT 移除了安卓兼容层，只能装 HAP。
+> 两条线都可以退一步用浏览器版，功能一致。
+
 ## 上架 / 合规
 
 | 文档 | 用途 |
