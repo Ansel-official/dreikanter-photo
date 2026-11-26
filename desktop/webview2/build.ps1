@@ -41,7 +41,8 @@ Copy-Item (Join-Path $repo 'js') (Join-Path $out 'app') -Recurse
 Copy-Item (Join-Path $repo 'icons') (Join-Path $out 'app') -Recurse
 Remove-Item (Join-Path $out 'app\icons\icon.html') -ErrorAction SilentlyContinue
 
-$files = (Get-ChildItem $out -Recurse -File | Measure-Object)
-$mb = [math]::Round((($files | Out-Null; Get-ChildItem $out -Recurse -File | Measure-Object Length -Sum).Sum / 1MB), 2)
+$files = Get-ChildItem $out -Recurse -File
+$total = ($files | Measure-Object Length -Sum).Sum
+$mb = [math]::Round($total / 1MB, 2)
 Write-Host "[4/4] 完成：$out（$($files.Count) 个文件 / $mb MB）" -ForegroundColor Green
 Write-Host "      双击 `"$out\Dreikanter photo.exe`" 即可运行" -ForegroundColor DarkGray
