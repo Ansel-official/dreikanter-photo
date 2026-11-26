@@ -401,6 +401,32 @@ function drawOverlay() {
   /* 参考线 */
   if (typeof Guides !== 'undefined' && Guides.draw) Guides.draw(ctx, z);
 
+  /* 像素网格：放大到 800% 以上，把每个像素的边界画出来（v18.1） */
+  App.pixelGrid = z >= 8;
+  document.body.classList.toggle('pixel-grid', App.pixelGrid);
+  if (App.pixelGrid) {
+    const W = App.doc.w * z, H = App.doc.h * z;
+    const lines = App.doc.w + App.doc.h;
+    if (lines <= 12000) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,.14)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 1; i < App.doc.w; i++) {
+        const x = Math.round(i * z) + .5;
+        if (x < 0 || x > W) continue;
+        ctx.moveTo(x, 0); ctx.lineTo(x, H);
+      }
+      for (let j = 1; j < App.doc.h; j++) {
+        const y = Math.round(j * z) + .5;
+        if (y < 0 || y > H) continue;
+        ctx.moveTo(0, y); ctx.lineTo(W, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
   /* 裁剪框 */
   if (App.cropRect) drawCropOverlay(ctx, z);
   if (typeof Compare !== 'undefined' && Compare.split) Compare.drawOverlay(ctx, z);
@@ -1166,6 +1192,10 @@ async function exportImageAsync(job = {}) {
   const ext = type === 'image/jpeg' ? '.jpg' : type === 'image/webp' ? '.webp' : '.png';
   const name = job.name || (exportName(baseName(App.doc.name), job.box, scale) + ext);
   downloadBlob(blob, name);
+  /* 登记本次会话导出（最多 60 个），「导出队列 → 打包 ZIP」用它 */
+  if (!Array.isArray(App.exports)) App.exports = [];
+  App.exports.push({ name, blob, time: Date.now() });
+  if (App.exports.length > 60) App.exports.shift();
   return { blob, name };
 }
 

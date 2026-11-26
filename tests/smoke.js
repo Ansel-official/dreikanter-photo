@@ -2837,6 +2837,157 @@
     });
 
     await fresh();
+﻿
+    /* ================= v18.1 ================= */
+
+    await t('起始页 · 新版布局与操作入口', async () => {
+      showWelcome();
+      await waitFor(() => document.querySelector('.wel-body'), 800);
+      const nav = document.querySelectorAll('.wel-row');
+      if (nav.length < 3) throw new Error('操作入口不足：' + nav.length);
+      if (!document.querySelector('.wel-recent')) throw new Error('缺少最近存档区');
+      if (!$('#welLegal')) throw new Error('缺少底部备案/版权行');
+      const ver = $('#welVer');
+      if (!ver || ver.textContent !== APP_VERSION) throw new Error('版本号未同步：' + (ver && ver.textContent));
+      return nav.length + ' 个入口 · ' + APP_VERSION;
+    });
+
+    await t('起始页 · 键盘提示与空状态', async () => {
+      showWelcome();
+      await waitFor(() => $('.wel-empty') || $('.wel-recent'), 800);
+      const empty = $('.wel-empty');
+      if (empty) {
+        if (!empty.querySelector('kbd')) throw new Error('空状态缺快捷键提示');
+        if (!empty.textContent.includes('拖')) throw new Error('空状态缺拖放提示');
+        return '空状态含 ' + empty.querySelectorAll('kbd').length + ' 个快捷键';
+      }
+      return '已有存档，走列表分支';
+    });
+
+    await t('ICP 备案 · 未配置时给出待填写提示', async () => {
+      localStorage.removeItem('siteLegal');
+      const node = Site.legalNode();
+      const pending = node.querySelector('[data-legal="pending"]');
+      if (!pending) throw new Error('未配置备案号时应有待填写提示');
+      if (!node.textContent.includes('©')) throw new Error('缺少版权行');
+      return pending.textContent.slice(0, 18);
+    });
+
+    await t('ICP 备案 · 配置后渲染可点击备案号', async () => {
+      localStorage.setItem('siteLegal', JSON.stringify({ icp: '京ICP备2026000000号-1', police: '京公网安备 11010802000000号' }));
+      const node = Site.legalNode();
+      const icp = node.querySelector('[data-legal="icp"]');
+      const pol = node.querySelector('[data-legal="police"]');
+      if (!icp || !pol) throw new Error('备案号未渲染');
+      if (icp.getAttribute('href') !== SITE.icpUrl) throw new Error('ICP 链接不对');
+      if (!/noopener/.test(icp.getAttribute('rel') || '')) throw new Error('外链缺 rel=noopener');
+      if (icp.getAttribute('target') !== '_blank') throw new Error('外链应新窗口打开');
+      if (!Site.hasFiling()) throw new Error('hasFiling 判定失败');
+      const txt = icp.textContent + ' / ' + pol.textContent;
+      localStorage.removeItem('siteLegal');
+      return txt;
+    });
+
+    await t('起始页 · 备案行挂进 DOM', async () => {
+      showWelcome();
+      await waitFor(() => $('#welLegal .legal-line') || $('#welLegal .legal-empty'), 800);
+      const line = $('#welLegal .legal-line');
+      if (!line) throw new Error('备案行未挂载');
+      if (!line.querySelector('.legal-copy')) throw new Error('缺少版权');
+      return line.textContent.slice(0, 24);
+    });
+
+    await t('像素网格 · 放大到 800% 才出现', async () => {
+      await fresh();
+      newDocument(64, 48, { bg: 'white', name: '网格自检' });
+      await wait(140);
+      setZoom(4);
+      drawOverlay();
+      if (App.pixelGrid) throw new Error('400% 不应显示像素网格');
+      if (document.body.classList.contains('pixel-grid')) throw new Error('body 类未撤销');
+      setZoom(8.5);
+      drawOverlay();
+      if (!App.pixelGrid) throw new Error('850% 应显示像素网格');
+      if (!document.body.classList.contains('pixel-grid')) throw new Error('body 未加 pixel-grid 类');
+      return '400% 关 / 850% 开';
+    });
+
+    await t('ZIP · 打包两个文件结构正确', async () => {
+      const a = new Blob([new Uint8Array([1, 2, 3, 4])], { type: 'image/png' });
+      const b = new Blob([new Uint8Array([9, 9])], { type: 'image/png' });
+      const zip = await ZipKit.build([{ name: 'a.png', blob: a }, { name: 'b.png', blob: b }]);
+      const bytes = new Uint8Array(await zip.arrayBuffer());
+      if (bytes[0] !== 0x50 || bytes[1] !== 0x4B || bytes[2] !== 0x03 || bytes[3] !== 0x04) throw new Error('本地文件头签名不对');
+      const tail = bytes.subarray(bytes.length - 22);
+      if (tail[0] !== 0x50 || tail[1] !== 0x4B || tail[2] !== 0x05 || tail[3] !== 0x06) throw new Error('EOCD 签名不对');
+      const count = tail[8] | (tail[9] << 8);
+      if (count !== 2) throw new Error('条目数不对：' + count);
+      const n = await ZipKit.count(zip);
+      if (n !== 2) throw new Error('本地头计数不对：' + n);
+      return count + ' 个条目 · ' + zip.size + ' 字节';
+    });
+
+    await t('ZIP · 空列表报错而不是产出空包', async () => {
+      let threw = false;
+      try { await ZipKit.build([]); } catch (e) { threw = true; }
+      if (!threw) throw new Error('空列表应抛错');
+      return '空列表已被拒绝';
+    });
+
+    await t('导出 · 登记后「打包 ZIP」可用', async () => {
+      await fresh();
+      newDocument(32, 32, { bg: 'white', name: '导出自检' });
+      await wait(140);
+      await exportImageAsync({ name: 'self-test-a.png' });
+      await exportImageAsync({ name: 'self-test-b.png' });
+      if (!Array.isArray(App.exports) || App.exports.length < 2) throw new Error('导出未登记：' + (App.exports && App.exports.length));
+      const btn = $('#expZip');
+      if (!btn) throw new Error('导出面板缺打包按钮');
+      if (btn.disabled) throw new Error('打包按钮被禁用');
+      return App.exports.length + ' 个已导出 · 按钮就绪';
+    });
+
+    await t('按钮审计 · 全部按钮都有可访问名称', async () => {
+      await fresh();
+      newDocument(80, 60, { bg: 'white', name: '审计自检' });
+      await wait(140);
+      const bad = [];
+      document.querySelectorAll('button').forEach(b => {
+        const name = (b.getAttribute('aria-label') || b.getAttribute('title') || b.textContent || '').trim();
+        if (!name) bad.push(b.id || b.className || '(匿名)');
+      });
+      if (bad.length) throw new Error('无名按钮 ' + bad.length + ' 个：' + bad.slice(0, 5).join(','));
+      return document.querySelectorAll('button').length + ' 个按钮全部有名';
+    });
+
+    await t('按钮审计 · 菜单项都有处理函数', async () => {
+      const bad = [];
+      MENUS.forEach(m => m.items.forEach(it => {
+        if (it.sep || it.cap) return;
+        if (typeof it.fn !== 'function') bad.push(m.label + '/' + it.label);
+        if (!it.label || !String(it.label).trim()) bad.push(m.label + '/空标题');
+      }));
+      if (bad.length) throw new Error('菜单项异常：' + bad.slice(0, 5).join(','));
+      let n = 0;
+      MENUS.forEach(m => m.items.forEach(it => { if (it.fn) n++; }));
+      return n + ' 个菜单项都有 fn';
+    });
+
+    await t('按钮审计 · 点击主要入口不抛异常', async () => {
+      await fresh();
+      newDocument(64, 64, { bg: 'white', name: '点击自检' });
+      await wait(140);
+      const ids = ['zoomIn', 'zoomOut', 'zoomFit'];
+      const hit = [];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        try { el.click(); } catch (e) { throw new Error(id + ' 点击抛错：' + e.message); }
+        hit.push(id);
+      }
+      if (hit.length < 3) throw new Error('可点入口太少：' + hit.length);
+      return hit.join(' / ');
+    });
     const pass = items.filter(i => i.pass).length;
     return {
       pass, total: items.length,

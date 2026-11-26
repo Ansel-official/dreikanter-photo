@@ -560,7 +560,12 @@ const UI = {
       const bar = h('div', { class: 'exp-bar' });
       const btnPause = h('button', { class: 'btn ghost', style: { flex: '1' }, onclick: () => { ExportQueue.paused ? ExportQueue.resume() : ExportQueue.pause(); UI.renderExportQueue(); } }, '暂停');
       const btnClear = h('button', { class: 'btn ghost', style: { flex: '1' }, onclick: () => { ExportQueue.clearFinished(); UI.renderExportQueue(); } }, '清空已完成');
-      bar.append(btnPause, btnClear);
+      const btnZip = h('button', {
+        class: 'btn ghost', style: { flex: '1' }, id: 'expZip',
+        title: '把本次会话导出过的图片打成一个 ZIP',
+        onclick: () => UI.bundleExports()
+      }, '打包 ZIP');
+      bar.append(btnPause, btnClear, btnZip);
       const list = h('div', { class: 'exp-list', id: 'expQueueList' });
       body.append(stateLine, bar, list);
       this._expList = list;
@@ -568,6 +573,40 @@ const UI = {
       ExportQueue.onChange = () => this.renderExportQueue();
       this.renderExportQueue();
     }, true, '0');
+  },
+
+  /* 把本次会话导出的图片打包成 ZIP（v18.1） */
+  async bundleExports() {
+    const list = Array.isArray(App.exports) ? App.exports.slice() : [];
+    if (!list.length) { toast('本次会话还没有导出过图片，先按 Ctrl S 导出一张', 'err'); return; }
+    if (typeof ZipKit === 'undefined') { toast('打包模块未加载', 'err'); return; }
+    const btn = document.getElementById('expZip');
+    if (btn) { btn.disabled = true; btn.textContent = '打包中…'; }
+    try {
+      const used = new Set();
+      const entries = list.map(item => {
+        let name = String(item.name || 'image').replace(/[\\/:*?"<>|]/g, '_');
+        if (used.has(name)) {
+          const dot = name.lastIndexOf('.');
+          const base = dot > 0 ? name.slice(0, dot) : name;
+          const ext = dot > 0 ? name.slice(dot) : '';
+          let i = 2;
+          while (used.has(base + '-' + i + ext)) i++;
+          name = base + '-' + i + ext;
+        }
+        used.add(name);
+        return { name, blob: item.blob };
+      });
+      const zip = await ZipKit.build(entries);
+      const d = new Date();
+      const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+      downloadBlob(zip, 'dreikanter-' + stamp + '.zip');
+      toast('已打包 ' + entries.length + ' 个文件（' + (zip.size / 1024).toFixed(0) + ' KB）', 'ok');
+    } catch (err) {
+      toast('打包失败：' + (err && err.message || err), 'err');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '打包 ZIP'; }
+    }
   },
 
   renderExportQueue() {
@@ -1656,20 +1695,36 @@ const UI = {
     const recents = $('#welRecents');
     if (recents) {
       recents.innerHTML = '';
-      if (typeof Archives !== 'undefined') {
-        Archives.list.slice(0, 3).forEach(s2 => {
-          recents.append(h('button', {
-            class: 'wel-recent',
-            onclick: async () => { hideWelcome(); await Archives.restore(s2.id); fitView(); }
-          },
-            h('img', { src: s2.thumb, alt: '' }),
-            h('span', { class: 'wr-meta' },
-              h('b', {}, s2.name),
-              h('span', {}, fmtTime(s2.time) + ' · ' + s2.w + '×' + s2.h))
-          ));
-        });
+      const list = (typeof Archives !== 'undefined') ? Archives.list.slice(0, 8) : [];
+      const cnt = $('#welRecentCount');
+      if (cnt) cnt.textContent = String(list.length);
+      if (!list.length) {
+        recents.append(h('div', { class: 'wel-empty' },
+          h('b', {}, '把图片拖进窗口'),
+          h('span', {}, '或按 ', h('kbd', {}, 'Ctrl O'), ' 打开、', h('kbd', {}, 'Ctrl N'), ' 新建、', h('kbd', {}, 'Ctrl V'), ' 粘贴'),
+          h('div', { class: 'wel-keys' },
+            h('span', {}, h('kbd', {}, 'Ctrl K'), '命令面板'),
+            h('span', {}, h('kbd', {}, 'Tab'), '专注画布'),
+            h('span', {}, h('kbd', {}, 'Space'), '临时抓手'),
+            h('span', {}, h('kbd', {}, 'Esc'), '返回编辑'))));
       }
+      list.forEach(s2 => {
+        recents.append(h('button', {
+          class: 'wel-recent',
+          title: s2.name + ' · ' + s2.w + '×' + s2.h,
+          onclick: async () => { hideWelcome(); await Archives.restore(s2.id); fitView(); }
+        },
+          h('img', { src: s2.thumb, alt: '' }),
+          h('span', { class: 'wr-meta' },
+            h('b', {}, s2.name),
+            h('span', {}, fmtTime(s2.time) + ' · ' + s2.w + '×' + s2.h))
+        ));
+      });
     }
+    /* 版本号 + 版权 / ICP 备案（site.js；未填备案号时显示待填写提示） */
+    const ver = $('#welVer');
+    if (ver) ver.textContent = APP_VERSION;
+    if (typeof Site !== 'undefined') Site.mountFooter($('#welLegal'), { id: 'welLegalLine' });
   },
 
   /* ---------------- 菜单抽屉（Apsis / 手机） ---------------- */

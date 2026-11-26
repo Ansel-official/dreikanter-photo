@@ -996,6 +996,15 @@ const Dialogs = {
               navigator.clipboard.writeText(txt).then(() => toast('版本信息已复制', 'ok')).catch(() => toast('复制失败', 'err'));
             }
           }, '复制版本信息')
+        ),
+        h('div', { class: 'about-legal' },
+          (typeof Site !== 'undefined')
+            ? Site.legalNode({ pendingText: 'ICP 备案：待填写（上线前见 docs/ICP备案.md）' })
+            : h('span', { class: 'legal-copy' }, '© Apsis severs 2026 & Ansel Design 2026'),
+          h('div', { class: 'about-links' },
+            h('a', { class: 'legal-link', href: (typeof SITE !== 'undefined' ? SITE.repo : 'https://github.com/Ansel-official/dreikanter-photo'), target: '_blank', rel: 'noopener noreferrer' }, '源码仓库'),
+            h('span', { class: 'legal-copy' }, (typeof SITE !== 'undefined' ? SITE.license : 'MIT') + ' License')
+          )
         )
       ],
       actions: [{ label: '关闭', primary: true }]

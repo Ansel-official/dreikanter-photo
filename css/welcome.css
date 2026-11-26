@@ -1,0 +1,186 @@
+/* ==========================================================================
+   Dreikanter photo — welcome.css
+   起始页（v18.1 重做）：左操作栏 + 右最近存档 + 底部备案/格式条
+   设计取向：纯色底、1px 描边、2–4px 圆角、无渐变无大阴影、等宽数字。
+   ========================================================================== */
+
+#welcome{
+  position:fixed;inset:0;z-index:700;
+  background:#0f0f10;
+  display:flex;flex-direction:column;
+  align-items:stretch;justify-content:flex-start;
+  transition:opacity .22s var(--ease),visibility .22s;
+  color:var(--c-text);
+  font-size:12px;
+}
+#welcome.hide{opacity:0;visibility:hidden;pointer-events:none}
+
+/* ---------- 顶栏 ---------- */
+.wel-top{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  height:40px;padding:0 14px;border-bottom:1px solid #262628;
+}
+.wel-mark{display:flex;align-items:center;color:#6f6f73}
+.wel-wordmark{
+  font-size:11.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:#dcdcde;
+}
+.wel-wordmark i{
+  font-style:normal;font-weight:400;letter-spacing:.02em;text-transform:none;
+  color:#7c7c81;margin-left:5px;
+}
+.wel-build{
+  font-family:var(--mono);font-size:9.5px;line-height:15px;color:#6b6b70;
+  border:1px solid #2c2c2f;border-radius:2px;padding:0 4px;
+}
+.wel-grow{flex:1}
+.wel-close{
+  appearance:none;border:1px solid #2f2f32;background:transparent;color:#a9a9ae;
+  font-size:11px;line-height:1;padding:5px 10px;border-radius:3px;cursor:pointer;
+  font-family:inherit;transition:background .12s,border-color .12s,color .12s;
+}
+.wel-close:hover{background:#1c1c1e;border-color:#3d3d41;color:#e6e6e8}
+
+/* ---------- 主体 ---------- */
+.wel-body{
+  flex:1 1 auto;min-height:0;display:flex;width:100%;
+}
+.wel-col{min-width:0;display:flex;flex-direction:column}
+
+/* 左：操作栏 */
+.wel-nav{
+  flex:0 0 268px;border-right:1px solid #262628;padding:14px 0 10px;
+  overflow-y:auto;
+}
+.wel-cap{
+  font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#63636a;
+  padding:0 16px 6px;font-weight:600;
+}
+.wel-cap-line{display:flex;align-items:center;justify-content:space-between;padding-right:16px}
+.wel-count{
+  font-family:var(--mono);font-size:9.5px;color:#63636a;letter-spacing:.04em;
+  margin-left:7px;
+}
+.wel-row{
+  appearance:none;width:100%;text-align:left;border:0;background:transparent;
+  display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;
+  font-family:inherit;color:inherit;position:relative;transition:background .12s;
+  border-left:2px solid transparent;
+}
+.wel-row + .wel-row{border-top:1px solid #1c1c1e}
+.wel-row:hover{background:#171719;border-left-color:var(--accent)}
+.wel-row:focus-visible{outline:1px solid var(--accent);outline-offset:-2px}
+.wr-ico{display:flex;align-items:center;color:#8a8a90;flex:0 0 auto}
+.wel-row:hover .wr-ico{color:#c9c9ce}
+.wr-txt{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.wr-txt b{font-size:12px;font-weight:500;color:#e2e2e5;letter-spacing:.01em}
+.wr-txt small{font-size:10px;color:#74747a;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wel-row kbd{
+  font-family:var(--mono);font-size:9px;color:#5f5f66;border:1px solid #2b2b2e;
+  border-radius:2px;padding:1px 4px;flex:0 0 auto;letter-spacing:.02em;
+}
+
+/* 继续编辑块 */
+.wel-resume-box{padding:2px 16px 4px;display:flex;flex-direction:column;gap:5px}
+.wel-resume-box button{
+  appearance:none;width:100%;text-align:left;cursor:pointer;font-family:inherit;
+  background:#1a1a1c;border:1px solid #34343a;border-radius:3px;color:#e6e6e8;
+  padding:8px 10px;font-size:11.5px;transition:background .12s,border-color .12s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.wel-resume-box button:hover{background:#202023;border-color:var(--accent)}
+.wel-resume-hint{font-size:9.5px;color:#6b6b71;line-height:1.5}
+
+/* 右：最近存档 */
+.wel-recent{flex:1 1 auto;padding:14px 0 0;overflow-y:auto}
+.wel-recent-list{padding:0 16px 12px;display:flex;flex-direction:column;gap:1px}
+.wel-recent{
+  appearance:none;border:0;background:transparent;text-align:left;cursor:pointer;
+  display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:3px;
+  font-family:inherit;color:inherit;transition:background .12s;
+}
+.wel-recent:hover{background:#171719}
+.wel-recent img{
+  width:52px;height:36px;object-fit:cover;border-radius:2px;
+  border:1px solid #2b2b2e;flex:0 0 auto;background:#141416;
+}
+.wel-recent .wr-meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wel-recent .wr-meta b{
+  font-size:11.5px;font-weight:500;color:#dedee1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.wel-recent .wr-meta span{font-size:9.5px;color:#6f6f76;font-family:var(--mono);letter-spacing:.02em}
+
+/* 空状态：整块区域当拖放提示 */
+.wel-empty{
+  border:1px dashed #2b2b2e;border-radius:3px;min-height:236px;width:100%;box-sizing:border-box;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  color:#6b6b72;font-size:11px;line-height:1.7;text-align:center;padding:20px;
+}
+.wel-empty b{display:block;color:#a2a2a8;font-weight:500;font-size:12.5px;margin-bottom:1px;letter-spacing:.02em}
+.wel-empty kbd{
+  font-family:var(--mono);font-size:9.5px;border:1px solid #2f2f33;border-radius:2px;
+  padding:0 4px;color:#8a8a90;
+}
+.wel-keys{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:7px 12px;
+  width:100%;max-width:520px;margin-top:14px;text-align:left;
+  font-size:9.5px;color:#5f5f66;letter-spacing:.02em;
+}
+.wel-keys span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+
+/* ---------- 底栏 ---------- */
+.wel-foot{
+  flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:7px 14px;border-top:1px solid #262628;background:#101012;
+}
+.wel-formats{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.wel-formats b{
+  font-family:var(--mono);font-size:8.5px;font-weight:500;color:#8b8b91;
+  border:1px solid #28282b;border-radius:2px;padding:0 3px;letter-spacing:.04em;
+}
+.wel-formats i{font-style:normal;font-size:8.5px;color:#4f4f55;margin-left:2px}
+.wel-legal{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* 备案行（欢迎页 / 关于框共用） */
+.legal-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:9.5px;color:#5c5c62}
+.legal-link{
+  color:#7c7c84;text-decoration:none;border-bottom:1px solid #313136;
+  font-family:var(--mono);font-size:9px;letter-spacing:.02em;transition:color .12s,border-color .12s;
+}
+.legal-link:hover{color:#c9c9d0;border-color:#5c5c66}
+.legal-empty{color:#54545a;font-size:9px;letter-spacing:.02em}
+.legal-copy{color:#4a4a50;font-size:9px;letter-spacing:.02em}
+
+/* 关于框内的备案行（浅一档，能和正文区分） */
+.about-legal{margin-top:10px;padding-top:9px;border-top:1px solid var(--c-line-soft)}
+.about-legal .legal-line{color:var(--c-text-3)}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width:860px){
+  .wel-body{flex-direction:column}
+  .wel-nav{flex:0 0 auto;border-right:0;border-bottom:1px solid #262628;padding-bottom:8px}
+  .wel-recent{padding-top:10px}
+  .wel-foot{gap:8px}
+  .wel-legal{margin-left:0;width:100%}
+}
+@media (max-width:560px){
+  .wel-row kbd{display:none}
+  .wel-recent img{width:42px;height:30px}
+}
+
+/* 关于框里的备案 / 仓库链接排版 */
+.about-links{display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+
+/* ==========================================================================
+   v18.1 去 AI 味收尾：品牌区与强调色的收敛
+   - 品牌标记不再整体染强调色，只保留一点点；
+   - 「photo」由彩色小字改为灰色等宽小字，去掉「渐变 logo」观感；
+   - 面板标题改成小型大写标签，弱化圆润卡片感。
+   ========================================================================== */
+.brand-mark{color:#8d8d93}
+.brand:hover .brand-mark{color:#b9b9c0}
+.brand i{
+  font-size:9px;color:#71717a;letter-spacing:.14em;font-weight:500;
+  border-left:1px solid #2e2e33;padding-left:6px;margin-left:1px;
+}
+.panel-head .ph-title{letter-spacing:.04em}
+.toast{border-radius:4px}

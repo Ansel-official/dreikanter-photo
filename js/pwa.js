@@ -19,6 +19,17 @@ const PWA = {
 
   register() {
     if (!('serviceWorker' in navigator)) return;
+    /* 开发逃生舱：地址加 ?nosw=1，或 localStorage.devNoSW=1，
+       就不再注册 SW 并注销已有的——改完 JS 刷新即可见，不受 cache-first 影响 */
+    try {
+      const off = new URL(location.href).searchParams.get('nosw') === '1' || localStorage.getItem('devNoSW') === '1';
+      if (off) {
+        navigator.serviceWorker.getRegistrations()
+          .then(rs => rs.forEach(r => r.unregister()))
+          .catch(() => { });
+        return;
+      }
+    } catch (e) { /* 老浏览器没有 URL API：继续走正常注册 */ }
     navigator.serviceWorker.register('sw.js').then(reg => {
       this.registration = reg;
       reg.addEventListener('updatefound', () => {

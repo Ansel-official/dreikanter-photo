@@ -2,22 +2,31 @@
 
 > 双模式图像工作台 · Photoshop 模式 / Apsis 模式
 > 纯前端、无构建、离线可用（双击 `index.html` 即可；http 下可安装为桌面应用）
-> 版本 **v18.0**（2026-11-23）· 自检 **276 项全绿**
+> 版本 **v18.1**（2026-11-26）· 自检 **288 项全绿**
 > © Apsis severs 2026 & Ansel Design 2026 · [MIT License](LICENSE)
 
 ---
+
+## v18.1 有什么新的
+
+- **起始页重做**：去掉「居中大 Logo + 三张卡片」的落地页观感，改成左操作栏 + 右最近存档 + 底部格式/备案条的工具型布局；空状态直接是拖放区，列出 7 个常用快捷键。
+- **像素网格**：放大到 800% 以上自动画出每个像素边界（可在覆盖层看到）。
+- **打包 ZIP**：导出队列面板新增「打包 ZIP」，把本次会话导出的图一次性打成包（零依赖实现）。
+- **ICP 备案位**：新增 `js/site.js` 与 `docs/ICP备案.md`，起始页与「关于」都会显示备案号；未填写时明确提示「待填写」。
+- **按钮审计**：394 个按钮全部有可访问名称，108 个菜单项全部可执行，主入口点击不抛异常。
+- 自检 **288/288**（新增 12 项）。
 
 ## 安装包（Release）
 
 | 平台 | 产物 | 说明 |
 |---|---|---|
-| Windows | `Dreikanter-photo-18.0.0-win-x64.exe`（71 MB） | Electron 33 便携版，双击即用，无需安装 |
-| Android | `Dreikanter-photo-18.0-android.apk`（0.96 MB） | WebView 壳，`minSdk 24 / target 34`，侧载安装（debug 签名，v2+v3） |
+| Windows | `Dreikanter-photo-18.1.0-win-x64.exe`（71 MB） | Electron 33 便携版，双击即用，无需安装 |
+| Android | `Dreikanter-photo-18.1-android.apk`（0.96 MB） | WebView 壳，`minSdk 24 / target 34`，侧载安装（debug 签名，v2+v3） |
 
 直达下载：
 
-- Windows：<https://github.com/Ansel-official/dreikanter-photo/releases/download/v18.0/Dreikanter-photo-18.0.0-win-x64.exe>
-- Android：<https://github.com/Ansel-official/dreikanter-photo/releases/download/v18.0/Dreikanter-photo-18.0-android.apk>
+- Windows：<https://github.com/Ansel-official/dreikanter-photo/releases/download/v18.1/Dreikanter-photo-18.1.0-win-x64.exe>
+- Android：<https://github.com/Ansel-official/dreikanter-photo/releases/download/v18.1/Dreikanter-photo-18.1-android.apk>
 
 两个包都由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在推 `v*` 标签时自动构建并挂到 Release（APK 走 aapt2 + javac + d8 + zipalign + apksigner，不依赖 Gradle）。
 

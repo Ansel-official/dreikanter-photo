@@ -337,6 +337,9 @@ const Apsis = {
           h('button', {
             class: 'deck-eye' + (l.visible ? '' : ' off'),
             html: icon(l.visible ? 'eye' : 'eyeOff', 13),
+            'aria-label': (l.visible ? '隐藏图层 ' : '显示图层 ') + (l.name || ''),
+            title: l.visible ? '隐藏图层' : '显示图层',
+            'aria-pressed': l.visible ? 'true' : 'false',
             onclick: e => {
               e.stopPropagation();
               History.begin('图层可见性', []);
