@@ -78,7 +78,7 @@
 
 ## 十、联系我们
 
-- 邮箱：`ansel@example.com`（请上线前替换为你的真实联系邮箱）
+- 邮箱：**Anselyoyo@outlook.com**
 - 仓库 Issues：<https://github.com/Ansel-official/dreikanter-photo/issues>
 
 我们会在收到请求后 15 个工作日内答复。
@@ -89,7 +89,7 @@
 
 Dreikanter photo is a fully local image editor. It does **not** collect, transmit, or share any photos or personal data. There is no account system, no analytics, no ads, and no third-party SDKs. All image processing happens on your device. Permissions (photo library, file save, clipboard) are requested only when you actively use the corresponding feature, and denying them only disables that specific feature.
 
-Contact: `ansel@example.com`
+Contact: Anselyoyo@outlook.com
 
 ---
 

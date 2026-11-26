@@ -21,7 +21,7 @@
 
 | 文档 | 用途 |
 |---|---|
-| [PRIVACY.md](PRIVACY.md) | 隐私政策（应用市场必填链接，可直接当网页托管） |
+| [PRIVACY.md](PRIVACY.md) / [privacy.html](privacy.html) | 隐私政策；在线版 `privacy.html` 可直接作为应用市场必填链接 |
 | [docs/App备案.md](docs/App备案.md) | App 备案流程、材料、可直接抄的填写模板 |
 | [docs/应用市场提审.md](docs/应用市场提审.md) | 华为应用市场提审：表单文案、截图清单、权限说明、驳回对策、成本 |
 | [docs/ICP备案.md](docs/ICP备案.md) | 网站 ICP 备案（做官网才需要） |
