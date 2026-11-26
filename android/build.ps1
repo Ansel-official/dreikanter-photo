@@ -8,13 +8,21 @@ param(
     [string]$Sdk = 'E:\toolchain\android-sdk',
     [string]$BuildTools = '34.0.0',
     [string]$Platform = 'android-34',
-    [string]$Version = '18.0',
+    [string]$Version = '',
     [string]$OutDir = ''
 )
 
 $ErrorActionPreference = 'Continue'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $app = Split-Path -Parent $root
+if (-not $Version) {
+    $pkgPath = Join-Path $app 'package.json'
+    if (Test-Path $pkgPath) {
+        $Version = (Get-Content $pkgPath -Raw | ConvertFrom-Json).version
+        if ($Version -match '^(\d+\.\d+)') { $Version = $Matches[1] }
+    }
+    if (-not $Version) { $Version = '18.1' }
+}
 if (-not $OutDir) { $OutDir = Join-Path $app 'dist\android' }
 
 $bt = Join-Path $Sdk "build-tools\$BuildTools"
