@@ -17,6 +17,15 @@
 - **HarmonyOS NEXT 支持**：新增 `harmony/` 原生壳工程（ArkTS + Web 组件），鸿蒙 5.x 装不了 APK 的机型改用 HAP，见 [harmony/README.md](harmony/README.md)。
 - **App 备案指南**：`docs/App备案.md`（App 备案 ≠ 网站 ICP 备案；自用不需要，上架才要）。
 
+## 上架 / 合规
+
+| 文档 | 用途 |
+|---|---|
+| [PRIVACY.md](PRIVACY.md) | 隐私政策（应用市场必填链接，可直接当网页托管） |
+| [docs/App备案.md](docs/App备案.md) | App 备案流程、材料、可直接抄的填写模板 |
+| [docs/应用市场提审.md](docs/应用市场提审.md) | 华为应用市场提审：表单文案、截图清单、权限说明、驳回对策、成本 |
+| [docs/ICP备案.md](docs/ICP备案.md) | 网站 ICP 备案（做官网才需要） |
+
 ## 鸿蒙（HarmonyOS NEXT）
 
 HarmonyOS 5.x（纯血鸿蒙）**不支持 APK**，需要用 HAP：
