@@ -1,0 +1,11 @@
+﻿Dreikanter photo v18.2.0 — SHA256（官方 GitHub Release 资产）
+生成：2026-11-26 · 来源：GitHub API release asset digest
+
+697051c1b9125a4b94bf70a0bfea74dfc1a05d7efea2b348cf02ce90d71a2f60  Dreikanter-photo-18.2-android.apk   （0.99 MB）
+a2a728d47a888e97260d484167ee3f2a1759c04beb8a433440a4fce3bffdd4fa  Dreikanter-photo-18.2.0-win-x64.exe （71.07 MB）
+
+校验方法
+  Windows PowerShell:  Get-FileHash .\Dreikanter-photo-18.2.0-win-x64.exe -Algorithm SHA256
+  Android / Linux:     sha256sum Dreikanter-photo-18.2-android.apk
+
+如果你是通过第三方镜像（如 gh-proxy）下载的，务必核对上面的哈希再安装。

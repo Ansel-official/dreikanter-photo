@@ -17,6 +17,16 @@
 - **HarmonyOS NEXT 支持**：新增 `harmony/` 原生壳工程（ArkTS + Web 组件），鸿蒙 5.x 装不了 APK 的机型改用 HAP，见 [harmony/README.md](harmony/README.md)。
 - **App 备案指南**：`docs/App备案.md`（App 备案 ≠ 网站 ICP 备案；自用不需要，上架才要）。
 
+## 下载
+
+| 方式 | 链接 | 说明 |
+|---|---|---|
+| 网页版（推荐先试） | <https://ansel-official.github.io/dreikanter-photo/> | 手机/电脑浏览器直接开，可「添加到桌面」离线用 |
+| Windows exe | [Release v18.2](https://github.com/Ansel-official/dreikanter-photo/releases/download/v18.2/Dreikanter-photo-18.2.0-win-x64.exe) | 71 MB，双击即用 |
+| Android apk | [Release v18.2](https://github.com/Ansel-official/dreikanter-photo/releases/download/v18.2/Dreikanter-photo-18.2-android.apk) | 1 MB，侧载安装 |
+| 国内加速（第三方镜像） | 在官方链接前加 `https://gh-proxy.com/` | 实测 ~227 KB/s（官方源 ~30 KB/s）。**务必核对 [CHECKSUMS.txt](CHECKSUMS.txt)** |
+| HarmonyOS NEXT | 见 [harmony/README.md](harmony/README.md) | 需要在 DevEco Studio 里自行构建 HAP |
+
 ## 平台支持矩阵
 
 | 平台 / 系统 | 用什么 | 状态 |
