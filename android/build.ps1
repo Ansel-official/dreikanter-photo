@@ -67,11 +67,66 @@ if ($LASTEXITCODE -ne 0) { throw 'aapt2 compile 失败' }
 Write-Host '[2/8] aapt2 compile' -ForegroundColor Cyan
 
 # --- 4. 链接（同时生成 R.java） -------------------------------------------------
-& "$bt\aapt2.exe" link -o "$work\base.apk" -I $androidJar `
+$VersionCode = 1
+if ($Version -match '^(\d+)\.(\d+)$') { $VersionCode = [int]$Matches[1] * 100 + [int]$Matches[2] }
+& "$bt\aapt2.exe" link -o "$work\base.apk" -I $androidJar --version-code $VersionCode --version-name $Version `
     --manifest (Join-Path $root 'AndroidManifest.xml') `
     -A $assets --java "$work\gen" "$work\res.zip" 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'aapt2 link 失败' }
 Write-Host '[3/8] aapt2 link' -ForegroundColor Cyan
+
+# --- 5. javac（警告不算失败，按产物判断） --------------------------------------
+$javaFiles = @()
+$javaFiles += Get-ChildItem (Join-Path $root 'src') -Recurse -Filter *.java | ForEach-Object { $_.FullName }
+$javaFiles += Get-ChildItem "$work\gen" -Recurse -Filter *.java | ForEach-Object { $_.FullName }
+& $javac -source 8 -target 8 -bootclasspath $androidJar -encoding UTF-8 -nowarn -d "$work\classes" $javaFiles 2>&1 | Out-Null
+$classCount = (Get-ChildItem "$work\classes" -Recurse -Filter *.class -ErrorAction SilentlyContinue | Measure-Object).Count
+if ($classCount -lt 1) { throw "javac 没产出 class（$classCount）" }
+Write-Host "[4/8] javac（$classCount 个 class）" -ForegroundColor Cyan
+
+# --- 6. d8 ---------------------------------------------------------------------
+$classFiles = Get-ChildItem "$work\classes" -Recurse -Filter *.class | ForEach-Object { $_.FullName }
+& "$bt\d8.bat" --lib $androidJar --min-api 24 --output "$work\dex" $classFiles 2>&1 | Out-Null
+if (-not (Test-Path "$work\dex\classes.dex")) { throw 'd8 没有产出 classes.dex' }
+Write-Host '[5/8] d8' -ForegroundColor Cyan
+
+# --- 7. 重新打包（解包 aapt2 产物 + 塞 classes.dex + jar cf0M） ---
+# 说明：aapt2 在 Windows 上会把 assets 子目录写成反斜杠，且 resources.arsc 必须是
+# 「不压缩 + 4 字节对齐」（Android 11+ 要求）。这里用 jar 的 -0（store）重打一遍最稳。
+$payload = Join-Path $work 'payload'
+New-Item -ItemType Directory -Force $payload | Out-Null
+# tar 能直接读 zip
+& tar -xf "$work\base.apk" -C $payload
+if ($LASTEXITCODE -ne 0) { throw '解包 base.apk 失败' }
+Copy-Item "$work\dex\classes.dex" $payload -Force
+$jar = Join-Path $JavaHome 'bin\jar.exe'
+& $jar cf0M "$work\unsigned.apk" -C $payload .
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$work\unsigned.apk")) { throw 'jar 重新打包失败' }
+Write-Host '[6/8] 重新打包（store + 正斜杠）' -ForegroundColor Cyan
+
+# --- 8. zipalign + 签名 --------------------------------------------------------
+& "$bt\zipalign.exe" -f -p 4 "$work\unsigned.apk" "$work\aligned.apk" 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'zipalign 失败' }
+
+$ks = Join-Path $root 'debug.keystore'
+if (-not (Test-Path $ks)) {
+    & $keytool -genkeypair -keystore $ks -alias androiddebugkey -storepass android -keypass android `
+        -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug,O=Android,C=US' 2>&1 | Out-Null
+    Write-Host '      已生成 debug.keystore' -ForegroundColor DarkGray
+}
+& "$bt\apksigner.bat" sign --ks $ks --ks-pass pass:android --key-pass pass:android `
+    --min-sdk-version 24 --out "$work\app.apk" "$work\aligned.apk" 2>&1 | Out-Null
+if (-not (Test-Path "$work\app.apk")) { throw 'apksigner 失败' }
+
+New-Item -ItemType Directory -Force $OutDir | Out-Null
+$final = Join-Path $OutDir "Dreikanter-photo-$Version-android.apk"
+Copy-Item "$work\app.apk" $final -Force
+Write-Host '[7/8] zipalign + 签名' -ForegroundColor Cyan
+
+# --- 校验 ---------------------------------------------------------------------
+& "$bt\apksigner.bat" verify --verbose $final 2>&1 | Select-String 'Verified|v1 scheme|v2 scheme|v3 scheme' | ForEach-Object { Write-Host "      $_" -ForegroundColor DarkGray }
+$size = [math]::Round((Get-Item $final).Length / 1MB, 2)
+Write-Host "[8/8] APK 完成：$final（$size MB）" -ForegroundColor Green
 
 # --- 5. javac（警告不算失败，按产物判断） --------------------------------------
 $javaFiles = @()
