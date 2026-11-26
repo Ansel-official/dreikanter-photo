@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>隐私政策 · E-dreikanterbot</title>
+<style>
+  :root{--bg:#0f0f10;--fg:#e6e6e8;--fg2:#a2a2a8;--fg3:#74747a;--line:#26262a;--line2:#303036;--acc:#6ea8fe;--code:#17171a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);padding:0 20px 72px;
+    font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","HarmonyOS Sans","Microsoft YaHei",sans-serif}
+  .wrap{max-width:760px;margin:0 auto}
+  header{padding:44px 0 22px;border-bottom:1px solid var(--line);margin-bottom:30px}
+  .kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--fg3);margin-bottom:10px}
+  h1{font-size:26px;line-height:1.35;margin:0 0 12px;font-weight:600}
+  .meta{font-size:12.5px;color:var(--fg3);line-height:2}
+  .meta b{color:var(--fg2);font-weight:500}
+  h2{font-size:16.5px;margin:38px 0 12px;font-weight:600;padding-left:11px;border-left:3px solid var(--acc);line-height:1.5}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:5px 0}
+  a{color:var(--acc);text-decoration:none}
+  .lead{border:1px solid var(--line2);border-left:3px solid var(--acc);border-radius:3px;padding:16px 18px;
+    margin:0 0 8px;background:#141417;font-size:14.5px;line-height:1.8}
+  .lead b{color:#fff}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:#16161a;color:var(--fg2);font-weight:500;white-space:nowrap}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--code);
+    border:1px solid var(--line2);border-radius:3px;padding:1px 5px;color:#d9d9de}
+  .hr{height:1px;background:var(--line);margin:34px 0}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--fg3);line-height:2}
+  @media (max-width:520px){body{padding:0 15px 56px;font-size:14.5px}h1{font-size:22px}table{font-size:12.5px}th,td{padding:7px 8px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Privacy Policy</div>
+  <h1>E-dreikanterbot 隐私政策</h1>
+  <div class="meta">
+    <div><b>开发者</b>　Ansel Design（Apsis severs）</div>
+    <div><b>版本</b>　V2.1.R　　<b>生效日期</b>　2026-11-26</div>
+    <div><b>形态</b>　自托管的聊天机器人（Node 服务 + 网页前端）</div>
+    <div><b>联系邮箱</b>　<a href="mailto:Anselyoyo@outlook.com">Anselyoyo@outlook.com</a></div>
+  </div>
+</header>
+
+<div class="lead">
+  <b>一句话：这是你自己运行的聊天工具。</b><br>
+  聊天记录、记忆库、分支存档都存在你运行服务的机器或你的浏览器里，我们不做账号体系，也不收集统计。
+  唯一的对外通信，是你（或管理员）配置的模型厂商 API。
+</div>
+
+<h2>一、谁在处理你的数据</h2>
+<p>E-dreikanterbot 是<strong>自托管软件</strong>：源码在你手里，服务跑在哪台机器由你决定。</p>
+<ul>
+  <li><b>自己部署自己用</b>：数据只在你自己的电脑/服务器上，开发者接触不到。</li>
+  <li><b>使用他人搭建的实例</b>：那台实例的运营者能看到你的请求内容，请以该实例运营方公布的政策为准。</li>
+</ul>
+
+<h2>二、会产生哪些数据，存在哪里</h2>
+<table>
+  <tr><th>数据</th><th>存在哪里</th><th>是否离开你的控制</th></tr>
+  <tr><td>对话内容、分支、标题</td><td>你的浏览器存储（localStorage / IndexedDB）</td><td>否</td></tr>
+  <tr><td>长期记忆条目</td><td>你的浏览器存储</td><td>否</td></tr>
+  <tr><td>界面设置（模型、温度、主题等）</td><td>你的浏览器存储</td><td>否</td></tr>
+  <tr><td>服务端配置的 API Key</td><td>服务器的环境变量 / <code>.env</code> 文件</td><td>否（只用于向模型厂商发起请求）</td></tr>
+  <tr><td>模型回复</td><td>实时返回给浏览器，不落服务端数据库</td><td>否</td></tr>
+</table>
+
+<h2>三、数据流：消息去了哪里</h2>
+<ol>
+  <li>你在网页里输入内容 → 发到你自己的服务端（<code>/api/chat</code> 之类的本地接口）；</li>
+  <li>服务端用**你自己配置的 API Key**，把这段对话转发给你选择的模型厂商（当前支持 DeepSeek、Kimi/Moonshot）；</li>
+  <li>厂商返回结果 → 服务端流式回传给你 → 浏览器显示并存入本地。</li>
+</ol>
+<p>除上述厂商外，本软件<strong>不向任何第三方发送数据</strong>：没有统计 SDK、没有广告、没有崩溃上报、没有远程配置。</p>
+<p>⚠️ 请知悉：调用云端模型时，对话内容会按该厂商的隐私政策处理（例如 DeepSeek、Moonshot 的开放平台条款）。若你处理敏感信息，请自行评估或改用本地模型。</p>
+
+<h2>四、API Key 怎么存</h2>
+<ul>
+  <li>Key 只写在<strong>服务端</strong>的 <code>.env</code> 或环境变量（<code>DEEPSEEK_API_KEY</code> / <code>KIMI_API_KEY</code>），不会下发到浏览器；</li>
+  <li>接口只返回「是否已配置」（<code>keyConfigured: true/false</code>），不返回 Key 明文；</li>
+  <li>请勿把 <code>.env</code> 提交进 Git；仓库已用 <code>.gitignore</code> 排除。</li>
+</ul>
+
+<h2>五、我们收集什么</h2>
+<p><strong>不收集</strong>：个人身份信息、设备标识符、位置、通讯录、相册、应用使用埋点。</p>
+<p>服务端默认只写本地日志（请求时间、状态码、错误信息），用于排查问题；日志留在你自己的机器上，不含 API Key 明文。</p>
+
+<h2>六、如何删除数据</h2>
+<ul>
+  <li>浏览器内：会话列表逐条删除，或清除站点数据（设置 → 网站数据 → 删除）；</li>
+  <li>服务端：删除部署目录即可（本软件不使用外部数据库）；</li>
+  <li>记忆库：在「记忆」面板里逐条删除或整体清空。</li>
+</ul>
+
+<h2>七、儿童与敏感信息</h2>
+<p>本工具面向具备基本判断力的使用者，不面向 14 周岁以下儿童单独设计。请勿在其中输入身份证号、银行卡、医疗记录等高度敏感信息。</p>
+
+<h2>八、政策变更</h2>
+<p>如未来版本新增账号体系、云端同步等功能，会先更新本政策并在界面提示；自托管部署时请以你拉取的那一版代码所附政策为准。</p>
+
+<h2>九、联系我们</h2>
+<p>
+  邮箱：<a href="mailto:Anselyoyo@outlook.com">Anselyoyo@outlook.com</a><br>
+  问题反馈：<a href="https://github.com/Ansel-official/E-dreikanterbot/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a>
+</p>
+<p>15 个工作日内答复。</p>
+
+<div class="hr"></div>
+
+<h2>English Summary</h2>
+<p>
+  E-dreikanterbot is a <b>self-hosted</b> chat client. Conversations, memories and settings live in your own
+  browser storage; the server only holds the API key you configured and forwards requests to the model
+  provider you chose (DeepSeek / Moonshot). No analytics, no ads, no tracking, no third-party SDKs.
+  If you use someone else's deployment, that operator's policy applies.
+</p>
+
+<footer>
+  <div>E-dreikanterbot · <a href="https://github.com/Ansel-official/E-dreikanterbot" target="_blank" rel="noopener noreferrer">源码仓库</a></div>
+  <div>© 2026 Apsis severs &amp; Ansel Design · MIT License</div>
+</footer>
+
+</div>
+</body>
+</html>
