@@ -1,7 +1,7 @@
 {
   "name": "dreikanter-photo",
   "productName": "Dreikanter photo",
-  "version": "19.1.0",
+  "version": "19.2.0",
   "description": "双模式图像工作台 · Photoshop 模式 / Apsis 模式（纯前端、离线可用）",
   "author": {
     "name": "Apsis severs & Ansel Design"
