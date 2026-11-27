@@ -635,6 +635,13 @@ const Tools = {
 
   dblClick(e) {
     if (this.current === 'crop' && App.cropRect) { cropToRect(App.cropRect, App.cropAngle); return; }
+    /* 移动 / 抓手：双击空白处 = 适合屏幕（手机上没有「适合屏幕」的快捷键） */
+    if (this.current === 'move' || this.current === 'hand') {
+      const pt = screenToDoc(e.clientX, e.clientY);
+      const onCanvas = pt.x >= 0 && pt.y >= 0 && pt.x <= App.doc.w && pt.y <= App.doc.h;
+      if (onCanvas) { fitView(); toast('已适合屏幕'); }
+      return;
+    }
     if (this.current === 'text') {
       const pt = screenToDoc(e.clientX, e.clientY);
       const l = App.layers.find(x => x.type === 'text' && x.text && pointInTextBox(pt, x));

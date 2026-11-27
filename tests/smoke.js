@@ -3050,6 +3050,22 @@
       return '已清理干净';
     });
 
+
+    await t('交互 · 双击画布空白处回到合适视图', async () => {
+      await fresh();
+      newDocument(400, 300, { bg: 'white', name: '双击' });
+      await wait(140);
+      Tools.setTool('move');
+      setZoom(4);
+      const before = App.view.zoom;
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      Tools.dblClick({ clientX: stage.left + stage.width / 2, clientY: stage.top + stage.height / 2 });
+      await wait(120);
+      if (Math.abs(App.view.zoom - before) < 0.01) throw new Error('双击后缩放没变：' + before);
+      if (App.view.zoom >= before) throw new Error('双击应缩小到适合屏幕，实际 ' + App.view.zoom);
+      return Math.round(before * 100) + '% → ' + Math.round(App.view.zoom * 100) + '%';
+    });
+
     const pass = items.filter(i => i.pass).length;
     return {
       pass, total: items.length,

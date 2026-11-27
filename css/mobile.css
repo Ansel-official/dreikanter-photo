@@ -30,12 +30,13 @@
   .brand b{font-size:12px}
   .brand i{display:none}
   .win-dots{display:none}
+  #installBtn{display:none !important}
   #paletteBtn{width:32px;height:32px;justify-content:center;padding:0;border-radius:8px}
   #paletteBtn span,#paletteBtn kbd{display:none}
   .mode-switch button{padding:4px 7px;font-size:9.5px}
   .mode-switch{border-radius:7px}
 
-  #optionsbar{height:46px;padding:0 8px;gap:8px}
+  #optionsbar{height:40px;padding:0 8px;gap:8px}
   .opt-tool{display:none}
   .opt-label{font-size:10px}
   .opt-field input{width:44px}
@@ -55,7 +56,8 @@
 
   #stagewrap{position:absolute;inset:0 0 56px 0}
   #stage{touch-action:none}
-  #statusbar{height:24px;font-size:9px;padding:0 8px;gap:6px}
+  #statusbar{height:26px;font-size:9.5px;padding:0 8px;gap:8px}
+  #statusbar .sb-right,#statusbar .sb-sep,#statusbar .sb-hint{display:none}
   .sb-mid{display:none}
   .copyright{display:none}
   .sb-btn.wide{padding:0 5px}

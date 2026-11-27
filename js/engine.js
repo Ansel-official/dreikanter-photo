@@ -200,8 +200,9 @@ function fitView() {
   const narrow = r.width <= 820;
   const padL = imm ? 40 : narrow ? 16 : apsis ? 46 : 74;
   const padR = imm ? 40 : narrow ? 16 : apsis ? 342 : 74;
-  const padT = imm ? 40 : narrow ? 14 : apsis ? 206 : 90;
-  const padB = imm ? 40 : narrow ? 32 : apsis ? 148 : 90;
+  /* 窄屏上下留白对称，保证画布在可视区正中间；桌面保持原来的构图平衡 */
+  const padT = imm ? 40 : narrow ? 24 : apsis ? 206 : 90;
+  const padB = imm ? 40 : narrow ? 24 : apsis ? 148 : 90;
   const z = Math.min((r.width - padL - padR) / App.doc.w, (r.height - padT - padB) / App.doc.h);
   App.view.zoom = clamp(z, 0.02, 8);
   App.view.cx = App.doc.w / 2;

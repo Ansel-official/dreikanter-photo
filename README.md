@@ -2,7 +2,7 @@
 
 > 双模式图像工作台 · Photoshop 模式 / Apsis 模式
 > 纯前端、无构建、离线可用（双击 `index.html` 即可；http 下可安装为桌面应用）
-> 版本 **v19.0**（2026-11-27）· 自检 **292 项全绿**
+> 版本 **v19.1**（2026-11-27）· 自检 **293 项全绿**
 > © Apsis severs 2026 & Ansel Design 2026 · [MIT License](LICENSE)
 
 ---
