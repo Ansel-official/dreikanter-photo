@@ -2988,6 +2988,68 @@
       if (hit.length < 3) throw new Error('可点入口太少：' + hit.length);
       return hit.join(' / ');
     });
+
+    /* ================= v19.0 ================= */
+
+    await t('按钮审计 · 每个按钮都绑了处理函数', async () => {
+      await fresh();
+      newDocument(80, 60, { bg: 'white', name: '按钮审计' });
+      await wait(140);
+      /* 打开几个关键面板/弹层，让动态按钮也渲染出来 */
+      const dead = [];
+      document.querySelectorAll('button').forEach(b => {
+        const hasHandler = !!b.onclick || !!b.getAttribute('onclick') ||
+          !!b.closest('label') || b.type === 'submit' ||
+          b.hasAttribute('data-nohandler');
+        if (!hasHandler) dead.push((b.id || b.className || '(匿名)') + ':' + (b.textContent || '').trim().slice(0, 12));
+      });
+      if (dead.length) throw new Error(dead.length + ' 个按钮没处理函数：' + dead.slice(0, 6).join(' | '));
+      return document.querySelectorAll('button').length + ' 个按钮全部有处理函数';
+    });
+
+    await t('按钮审计 · 点击后状态确实发生变化', async () => {
+      await fresh();
+      newDocument(64, 64, { bg: 'white', name: '点击后' });
+      await wait(140);
+      const before = App.view.zoom;
+      document.getElementById('zoomIn').click();
+      await wait(80);
+      if (App.view.zoom === before) throw new Error('zoomIn 点击后缩放未变');
+      document.getElementById('zoomOut').click();
+      await wait(80);
+      if (Math.abs(App.view.zoom - before) > 0.001) throw new Error('zoomOut 没有还原');
+      const toolBefore = App.tool;
+      const btn = document.querySelector('[data-tool]:not(.on)');
+      if (btn) {
+        btn.click();
+        await wait(80);
+        if (App.tool === toolBefore && btn.dataset.tool !== toolBefore) throw new Error('工具栏按钮点击无效');
+      }
+      return '缩放往返 ' + Math.round(before * 100) + '% → ' + Math.round(App.view.zoom * 100) + '%';
+    });
+
+    await t('布局 · 文档无横向溢出', async () => {
+      const de = document.documentElement;
+      const over = de.scrollWidth - window.innerWidth;
+      if (over > 2) throw new Error('横向溢出 ' + over + 'px');
+      return window.innerWidth + 'px 视口 · 溢出 ' + Math.max(0, over) + 'px';
+    });
+
+    await t('样式 · 没有残留的废弃类规则', async () => {
+      /* v18.1 重做起始页时删掉的 .welcome-* 必须清理干净，否则样式表越长越难维护 */
+      let hit = 0;
+      for (const sheet of document.styleSheets) {
+        try {
+          for (const r of sheet.cssRules) {
+            if (r.selectorText && /\.welcome-/.test(r.selectorText)) hit++;
+            if (r.cssRules) for (const r2 of r.cssRules) if (r2.selectorText && /\.welcome-/.test(r2.selectorText)) hit++;
+          }
+        } catch (e) { }
+      }
+      if (hit) throw new Error('还有 ' + hit + ' 条 .welcome-* 规则');
+      return '已清理干净';
+    });
+
     const pass = items.filter(i => i.pass).length;
     return {
       pass, total: items.length,

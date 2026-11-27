@@ -214,3 +214,13 @@ button{min-height:0}
   .panel-head .ph-title,.menu-item,.cmd-item,.layer-name{font-weight:600}
   .opt-field,.btn,.arc-item,.card{border-width:1px}
 }
+
+/* ==========================================================================
+   v19.0 — 命中区下限（WCAG 2.2 AA：指针目标 ≥24×24）
+   只补不足 24px 的几个控件，不改动已达标的部分。
+   ========================================================================== */
+.ghost-btn{min-height:26px}
+.wel-close{min-height:26px;padding:6px 11px}
+.rail-swatches .sw-reset{min-height:28px;min-width:28px}
+.panel .btn{min-height:26px}
+.tab,.sb-btn{min-height:24px}

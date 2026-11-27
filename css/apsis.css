@@ -275,24 +275,15 @@ body.mode-apsis .copyright{color:rgba(255,255,255,.28)}
 .aps-chat::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
 
 /* ---------------- 响应式 ---------------- */
-@media (max-width:1240px){
-  body.mode-ps{--panel:258px}
-  #inspector{width:272px}
-}
-@media (max-width:1060px){
-  body.mode-ps{--panel:232px}
+@media (max-width:1240px){body.mode-ps{--panel:258px}
+  #inspector{width:272px}}
+@media (max-width:1060px){body.mode-ps{--panel:232px}
   #inspector{width:252px;top:126px}
-  .apsis-sub{display:none}
-}
-@media (max-width:760px){
-  .welcome-actions{grid-template-columns:1fr}
-  body.mode-ps #panels{display:none}
+  .apsis-sub{display:none}}
+@media (max-width:760px){body.mode-ps #panels{display:none}
   #inspector{display:none !important}
-  #quickbar{bottom:calc(var(--dock-h) + 16px)}
-}
-@media (max-width:620px){
-  #apsisTop{padding-top:46px}
+  #quickbar{bottom:calc(var(--dock-h) + 16px)}}
+@media (max-width:620px){#apsisTop{padding-top:46px}
   .intent-field{height:42px}
   .intent-hint{display:none}
-  #dock{gap:0;padding:5px}
-}
+  #dock{gap:0;padding:5px}}

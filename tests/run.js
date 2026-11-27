@@ -76,6 +76,46 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   if (fails.length) { console.log('\n失败项：'); fails.forEach(f => console.log('  ✗ ' + f.name + '  ' + (f.info || ''))); }
   if (res.errors && res.errors.length) { console.log('\n运行时错误：'); res.errors.forEach(e => console.log('  ' + e)); }
 
+  /* --------- v19.0：多端布局检查（375 手机 / 768 平板 / 1280 桌面） --------- */
+  const adaptFails = [];
+  const checkViewport = async (w, h, label) => {
+    await send('Emulation.setDeviceMetricsOverride', {
+      width: w, height: h, deviceScaleFactor: 1, mobile: w < 600
+    });
+    await sleep(450);
+    const rr = await send('Runtime.evaluate', {
+      expression: `(() => {
+        const de = document.documentElement;
+        const over = de.scrollWidth - window.innerWidth;
+        const small = [];
+        document.querySelectorAll('button').forEach(el => {
+          const label = (el.textContent || '').trim();
+          if (!label) return;                       /* 纯图标按钮另行检查，这里只看带文字的 */
+          if (el.closest('.swatch-grid')) return;   /* 色板是刻意的小方块 */
+          const r = el.getBoundingClientRect();
+          if (r.width > 0 && r.height > 0 && r.height < 23.5) small.push((el.id || el.className || '?') + ':' + Math.round(r.height));
+        });
+        return { over, w: window.innerWidth, h: window.innerHeight, small: small.slice(0, 5), smallCount: small.length };
+      })()`, returnByValue: true
+    });
+    const v = rr.result && rr.result.result && rr.result.result.value;
+    await send('Emulation.clearDeviceMetricsOverride');
+    await sleep(200);
+    if (!v) { adaptFails.push(label + ' 读取失败'); return; }
+    if (v.over > 2) adaptFails.push(label + ' 横向溢出 ' + v.over + 'px');
+    if (v.smallCount) adaptFails.push(label + ' 命中区过小 ' + v.smallCount + ' 个：' + v.small.join(','));
+    console.log(`  适配 ${label}: ${v.w}×${v.h} 溢出 ${Math.max(0, v.over)}px 小目标 ${v.smallCount}`);
+  };
+  for (const [w, h, label] of [[375, 667, '手机'], [768, 1024, '平板'], [1280, 800, '桌面']]) {
+    await checkViewport(w, h, label);
+  }
+  if (adaptFails.length) {
+    console.log('\n适配问题：');
+    adaptFails.forEach(f => console.log('  ✗ ' + f));
+  } else {
+    console.log('  适配 三档视口全部通过');
+  }
+
   if (process.argv.includes('--shots')) {
     /* v18.1：先给起始页留一张（自检跑完后界面停在编辑器，这里再切回去） */
     await send('Runtime.evaluate', {
@@ -263,5 +303,5 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   /* 清理临时浏览器档案，避免每次运行留下几十 MB */
   await sleep(600);
   try { fs.rmSync(PROFILE, { recursive: true, force: true }); } catch (e) { }
-  process.exit(fails.length ? 1 : 0);
+  process.exit(fails.length || adaptFails.length ? 1 : 0);
 })().catch(e => { console.log('运行器错误：', e.message); process.exit(1); });

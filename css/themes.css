@@ -143,16 +143,7 @@ body.theme-light .ctx-item{color:#3a3a44}
 body.theme-light .ctx-sep{background:#e2e2e8}
 body.theme-light .recent-label,body.theme-light .recent-empty{color:#9a9aa4}
 body.theme-light #welcome{background:radial-gradient(1100px 640px at 50% 6%,rgba(252,252,254,.97),rgba(236,236,242,.99))}
-body.theme-light .welcome-brand h1,body.theme-light .wel-card b{color:#1d1d21}
-body.theme-light .welcome-brand p,body.theme-light .wel-card small{color:#7a7a84}
-body.theme-light .wel-card{background:linear-gradient(180deg,#ffffff,#f5f5f8);border-color:#dcdce4}
-body.theme-light .wel-card:hover{background:#fff;border-color:#c9c9d4}
-body.theme-light .wc-ico{background:#f2f2f6;border-color:#e2e2e8;color:#6a6a74}
-body.theme-light .welcome-formats{color:#8a8a94}
-body.theme-light .welcome-formats b{color:#5a5a64;border-color:#dcdce4}
-body.theme-light .welcome-foot{color:#9a9aa4}
-
-/* ---------------- 纯黑 OLED ---------------- */
+body.theme-light .wc-ico{background:#f2f2f6;border-color:#e2e2e8;color:#6a6a74}/* ---------------- 纯黑 OLED ---------------- */
 body.theme-oled{--bg:#000;--bg-1:#080808;--bg-2:#0f0f0f;--bg-3:#151515;--bg-4:#1c1c1c;--stroke:#242424}
 body.theme-oled #stage{background:#000}
 body.theme-oled #stagewrap{background:#000}

@@ -104,7 +104,7 @@ button{border:0;background:none;cursor:pointer}
 
 .mode-switch{display:flex;background:#151515;border:1px solid #3a3a3a;border-radius:5px;padding:2px;gap:2px}
 .mode-switch button{
-  padding:2px 9px;font-size:10.5px;border-radius:3px;color:#8b8b8b;letter-spacing:.2px;
+  min-height:24px;padding:2px 9px;font-size:10.5px;border-radius:3px;color:#8b8b8b;letter-spacing:.2px;display:inline-flex;align-items:center;
   transition:all .15s var(--ease);white-space:nowrap;
 }
 .mode-switch button:hover{color:#ddd}
@@ -201,7 +201,7 @@ body.theme-light .opt-mode.on{background:var(--accent);color:#fff}
 .rail-swatches .sw-fg{left:0;top:0;z-index:2}
 .rail-swatches .sw-bg{right:0;bottom:0;z-index:1}
 .rail-swatches .sw-reset{
-  position:absolute;left:-1px;bottom:-1px;width:11px;height:11px;border-radius:2px;background:#2b2b2b;
+  position:absolute;left:-1px;bottom:-1px;width:28px;height:28px;border-radius:3px;background:#2b2b2b;
   border:1px solid #4a4a4a;z-index:3;display:flex;align-items:center;justify-content:center;color:#aaa;
   font-size:8px;line-height:1;
 }
@@ -580,8 +580,7 @@ body.theme-light .cap-line{color:#83838d;border-bottom-color:rgba(0,0,0,.08)}
 /* 直方图通道切换 */
 .hist-ch{display:flex;gap:3px;margin-top:-2px}
 .hist-ch-btn{
-  height:18px;padding:0 7px;border-radius:3px;background:#2d2d2d;border:1px solid #3d3d3d;
-  font-size:9.5px;color:#9a9aa2;cursor:pointer;letter-spacing:.4px;
+  height:24px;min-height:24px;padding:0 8px;border-radius:3px;background:#2d2d2d;border:1px solid #3d3d3d;font-size:9.5px;color:#9a9aa2;cursor:pointer;letter-spacing:.4px;display:inline-flex;align-items:center;box-sizing:border-box;
 }
 .hist-ch-btn:hover{color:#fff;border-color:#4d4d4d}
 .hist-ch-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -646,15 +645,7 @@ body.theme-light .exp-name{color:#2a2a32}
   background:radial-gradient(1100px 640px at 50% 6%,rgba(42,42,46,.97) 0%,rgba(22,22,24,.985) 52%,rgba(12,12,14,1) 100%);
   display:flex;align-items:center;justify-content:center;transition:opacity .3s var(--ease),visibility .3s;
 }
-#welcome.hide{opacity:0;visibility:hidden;pointer-events:none}
-.welcome-inner{width:min(720px,90vw);display:flex;flex-direction:column;align-items:center;gap:26px;text-align:center}
-.welcome-brand{display:flex;flex-direction:column;align-items:center;gap:9px;color:#eaeaea}
-.welcome-brand svg{color:var(--accent);opacity:.95}
-.welcome-brand h1{margin:4px 0 0;font-size:26px;font-weight:600;letter-spacing:-.4px}
-.welcome-brand h1 em{font-style:normal;font-weight:300;color:var(--accent);letter-spacing:.5px}
-.welcome-brand p{margin:0;font-size:11.5px;color:#9c9c9c;letter-spacing:.3px}
-.welcome-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;width:100%}
-.wel-card{
+#welcome.hide{opacity:0;visibility:hidden;pointer-events:none}.wel-card{
   background:linear-gradient(180deg,#242424,#1e1e1e);border:1px solid #3a3a3a;border-radius:11px;padding:16px 13px;text-align:left;
   display:flex;flex-direction:column;gap:3px;transition:all .18s var(--ease);position:relative;overflow:hidden;
 }
@@ -665,13 +656,7 @@ body.theme-light .exp-name{color:#2a2a32}
   align-items:center;justify-content:center;color:#9d9d9d;margin-bottom:8px;transition:all .18s;
 }
 .wel-card b{font-size:12.5px;color:#e7e7e7;font-weight:600}
-.wel-card small{font-size:10px;color:#909090;line-height:1.5}
-.welcome-formats{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;font-size:10px;color:#7d7d7d}
-.welcome-formats b{color:#b0b0b0;font-weight:500;border:1px solid #303030;border-radius:3px;padding:1px 5px;font-family:var(--mono);font-size:9px}
-.welcome-formats i{color:#4e4e4e;font-style:normal;font-size:9px}
-.welcome-foot{font-size:9.5px;color:#5f5f5f;letter-spacing:.5px}
-
-#dropveil{
+.wel-card small{font-size:10px;color:#909090;line-height:1.5}#dropveil{
   position:fixed;inset:0;z-index:800;display:none;align-items:center;justify-content:center;
   background:rgba(10,10,10,.72);border:2px dashed var(--accent);
   color:var(--accent);font-size:14px;letter-spacing:1px;

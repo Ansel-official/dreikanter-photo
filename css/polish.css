@@ -51,34 +51,13 @@ body.theme-light .ms-head{background:#f7f7f9;color:#1d1d21}
 body.theme-light .ms-group{border-color:#e4e4ea}
 body.theme-light .ms-item{color:#3a3a44}
 body.theme-light .ms-item:hover{background:#e9e9ef;color:#111}
-body.theme-light .ms-close:hover{background:#e9e9ef}
-
-/* ---------------- 欢迎页 ---------------- */
-.welcome-close{
-  position:absolute;top:18px;right:20px;width:34px;height:34px;border-radius:50%;
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-  color:#9a9a9a;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;
-  z-index:2;
-}
-.welcome-close:hover{background:rgba(255,255,255,.12);color:#fff;transform:rotate(90deg)}
-.welcome-inner{width:min(800px,92vw) !important;gap:30px !important}
-.welcome-brand h1{font-size:32px !important}
-.welcome-brand p{font-size:12px !important}
-.welcome-actions{gap:14px !important}
-.wel-card{padding:20px 17px !important;border-radius:13px !important}
+body.theme-light .ms-close:hover{background:#e9e9ef}.wel-card{padding:20px 17px !important;border-radius:13px !important}
 .wel-card b{font-size:13.5px}
 .wel-card small{font-size:10.5px;line-height:1.6}
-.wc-ico{width:42px !important;height:42px !important;border-radius:11px !important}
-.welcome-inner{width:min(800px,92vw) !important;gap:30px !important}
-.welcome-brand h1{font-size:32px !important}
-.welcome-brand p{font-size:12px !important}
-.welcome-actions{gap:14px !important}
-.wel-card{padding:20px 17px !important;border-radius:13px !important}
+.wc-ico{width:42px !important;height:42px !important;border-radius:11px !important}.wel-card{padding:20px 17px !important;border-radius:13px !important}
 .wel-card b{font-size:13.5px}
 .wel-card small{font-size:10.5px;line-height:1.6}
-.wc-ico{width:42px !important;height:42px !important;border-radius:11px !important}
-.welcome-resume{display:flex;flex-direction:column;align-items:center;gap:7px;margin-top:-6px}
-.wel-resume{
+.wc-ico{width:42px !important;height:42px !important;border-radius:11px !important}.wel-resume{
   padding:11px 26px;border-radius:999px;background:var(--accent);color:#fff;
   font-size:12.5px;font-weight:600;letter-spacing:.2px;
   box-shadow:0 12px 32px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06) inset;
@@ -86,10 +65,7 @@ body.theme-light .ms-close:hover{background:#e9e9ef}
 .wel-resume:hover{filter:brightness(1.09);transform:translateY(-1px)}
 .wel-resume:active{transform:translateY(0)}
 .wel-resume-hint{font-size:10px;color:#6f6f78}
-body.theme-light .wel-resume-hint{color:#8a8a94}
-body.theme-light .welcome-close{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);color:#6a6a74}
-
-/* ---------------- 提示气泡 ---------------- */
+body.theme-light .wel-resume-hint{color:#8a8a94}/* ---------------- 提示气泡 ---------------- */
 .tip{
   position:fixed;z-index:4000;max-width:264px;padding:5px 9px;border-radius:6px;
   background:rgba(28,28,32,.97);border:1px solid rgba(255,255,255,.13);color:#eaeaf0;
@@ -123,40 +99,18 @@ textarea.code-editor::placeholder{color:#5a5a62}
 body.theme-light ::-webkit-scrollbar-thumb{background:#c4c4cc;background-clip:content-box}
 
 /* ---------------- 手机端主页 ---------------- */
-@media (max-width:820px){
-  #welcome{align-items:flex-start !important;justify-content:center;overflow-y:auto;padding:42px 0 26px}
-  .welcome-inner{gap:20px !important;width:min(560px,92vw) !important}
-  .welcome-brand h1{font-size:27px !important}
-  .welcome-brand svg{width:38px;height:38px}
-  .welcome-brand p{font-size:11px !important}
-  .welcome-actions{gap:11px !important}
-  .wel-card{padding:15px 14px !important;border-radius:11px !important;flex-direction:row;align-items:center;gap:12px}
+@media (max-width:820px){#welcome{align-items:flex-start !important;justify-content:center;overflow-y:auto;padding:42px 0 26px}  .wel-card{padding:15px 14px !important;border-radius:11px !important;flex-direction:row;align-items:center;gap:12px}
   .wc-ico{width:38px !important;height:38px !important;margin-bottom:0 !important;flex:0 0 auto}
   .wel-card b{font-size:12.5px}
   .wel-card small{font-size:9.5px}
-  .wel-resume{padding:10px 22px;font-size:12px}
-  .welcome-formats{gap:4px;font-size:9px}
-  .welcome-foot{font-size:9px;padding-bottom:12px}
-  .welcome-close{top:12px;right:12px;width:30px;height:30px}
-}
+  .wel-resume{padding:10px 22px;font-size:12px}}
 
 /* ---------------- 手机端主页 ---------------- */
-@media (max-width:820px){
-  #welcome{align-items:flex-start !important;justify-content:center;overflow-y:auto;padding:42px 0 26px}
-  .welcome-inner{gap:20px !important;width:min(560px,92vw) !important}
-  .welcome-brand h1{font-size:27px !important}
-  .welcome-brand svg{width:38px;height:38px}
-  .welcome-brand p{font-size:11px !important}
-  .welcome-actions{gap:11px !important}
-  .wel-card{padding:15px 14px !important;border-radius:11px !important;flex-direction:row;align-items:center;gap:12px}
+@media (max-width:820px){#welcome{align-items:flex-start !important;justify-content:center;overflow-y:auto;padding:42px 0 26px}  .wel-card{padding:15px 14px !important;border-radius:11px !important;flex-direction:row;align-items:center;gap:12px}
   .wc-ico{width:38px !important;height:38px !important;margin-bottom:0 !important;flex:0 0 auto}
   .wel-card b{font-size:12.5px}
   .wel-card small{font-size:9.5px}
-  .wel-resume{padding:10px 22px;font-size:12px}
-  .welcome-formats{gap:4px;font-size:9px}
-  .welcome-foot{font-size:9px;padding-bottom:12px}
-  .welcome-close{top:12px;right:12px;width:30px;height:30px}
-}
+  .wel-resume{padding:10px 22px;font-size:12px}}
 
 /* ---------------- 多文档标签 ---------------- */
 .tabbar{
@@ -186,11 +140,7 @@ body.theme-light .tabbar{background:#ececf0;border-bottom-color:#d8d8de}
 body.theme-light .tab{background:#fff;border-color:#d8d8de;color:#5a5a64}
 body.theme-light .tab.active{background:#fff;border-color:#c4c4cc;color:#111;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 body.theme-light .tab-x:hover{background:#e6e6ec;color:#111}
-body.mode-apsis .tabbar{display:none}
-
-/* ---------------- 欢迎页最近存档 ---------------- */
-.welcome-recents{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}
-.wel-recent{
+body.mode-apsis .tabbar{display:none}.wel-recent{
   display:flex;align-items:center;gap:9px;padding:7px 10px 7px 7px;border-radius:10px;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
   max-width:210px;text-align:left;
